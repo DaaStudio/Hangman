@@ -22,6 +22,8 @@
             --option-bg: #3a3f47;
             --border-radius-main: 24px;
             --border-radius-small: 16px;
+            --letterbox-border: var(--glass-border);
+            --letterbox-glow: 0 0 12px rgba(255, 255, 255, 0.4);
         }
 
         [data-theme="light"] {
@@ -36,6 +38,8 @@
             --error-color: #d90429;
             --success-color: #008000;
             --option-bg: #ffffff;
+            --letterbox-border: rgba(15, 23, 42, 0.3);
+            --letterbox-glow: 0 0 12px rgba(0, 119, 255, 0.25);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,79 +72,197 @@
             padding: 1.5rem;
         }
 
-        .game-header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            width: 100%;
-            padding-bottom: 1rem;
-            min-height: 45px;
-        }
-        
+        .game-header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; width: 100%; padding-bottom: 1rem; min-height: 45px; }
+        .header-left, .header-center, .header-right { display: flex; gap: 10px; align-items: center; }
+        .header-center { flex-grow: 1; justify-content: center; }
+        .header-right { justify-content: flex-end; }
         .game-stats { display: flex; gap: 15px; font-size: 1rem; font-weight: 600; color: var(--primary-color); background: var(--glass-bg); padding: 8px 15px; border-radius: var(--border-radius-small); border: 1px solid var(--glass-border); flex-shrink: 0; }
-        
-        .controls { display: flex; gap: 10px; margin-left: auto; }
         .control-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); cursor: pointer; width: 45px; height: 45px; border-radius: var(--border-radius-small); font-size: 1.2rem; line-height: 1; color: var(--text-color); display: flex; justify-content: center; align-items: center; transition: all 0.2s ease-in-out; font-weight: 700; padding: 0; }
         .control-btn:hover:not(:disabled) { background-image: var(--accent-gradient); color: white; transform: scale(1.1); }
         .control-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; background-image: none; background: var(--glass-bg); }
-        
-        .language-menu { position: absolute; top: 55px; right: 0; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: var(--border-radius-small); list-style: none; max-height: 250px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 20px var(--shadow-color); display: none; }
+        .language-menu { position: absolute; top: 55px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: var(--border-radius-small); list-style: none; max-height: 250px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 20px var(--shadow-color); display: none; }
         .language-menu.show { display: block; }
         .language-menu li { padding: 12px 18px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: all 0.2s ease; }
         .language-menu li:hover { background: var(--glass-border); }
         .language-menu li.active { font-weight: 600; color: var(--success-color); }
-        
         @keyframes pulse-red { 0% { box-shadow: 0 0 4px var(--error-color); } 50% { box-shadow: 0 0 16px var(--error-color); } 100% { box-shadow: 0 0 4px var(--error-color); } }
         .control-btn.pulse-danger { animation: pulse-red 1.5s infinite; transform: scale(1.1); border-color: var(--error-color); }
-
         .screen-wrapper { flex-grow: 1; width: 100%; }
-        
         .screen { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; width: 100%; }
         .screen.active { display: flex; animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         h1, h2 { color: var(--primary-color); text-align: center; font-weight: 700; text-shadow: 0 2px 4px var(--shadow-color); }
-        
         #scoreboard { width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; padding: 0.5rem 0.25rem; border-bottom: 2px solid var(--glass-border); margin-bottom: 1rem; box-shadow: none; }
         .score-display { font-size: 1.1rem; font-weight: 600; color: var(--text-color); transition: transform 0.3s ease, color 0.3s ease; display: flex; align-items: center; gap: 8px; }
         .score-display.active-turn { transform: scale(1.05); color: var(--success-color); }
-
         button { font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 600; padding: 0.9rem 1.5rem; border-radius: var(--border-radius-small); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-color); cursor: pointer; width: 100%; transition: all 0.2s ease-in-out; }
         button.btn-primary { background-image: var(--accent-gradient); color: white; border: none; }
         button.btn-primary:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); box-shadow: 0 4px 15px var(--shadow-color); }
-        
         .setup-form, .mode-buttons { display: flex; flex-direction: column; gap: 1.25rem; width: 100%; max-width: 350px; }
-        
         input, select { width: 100%; padding: 1rem; background: transparent; border: 1px solid var(--glass-border); border-radius: var(--border-radius-small); color: var(--primary-color); font-size: 1rem; font-family: 'Poppins', sans-serif; }
         select option { background: var(--option-bg); color: var(--text-color); }
-        
         .hangman-svg { stroke: var(--primary-color); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 2px 3px var(--shadow-color)); }
         
-        .word-display { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
-        .letter-placeholder { width: 40px; height: 50px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 700; color: var(--primary-color); background: var(--glass-bg); border: 1px solid transparent; border-bottom: 3px solid var(--glass-border); }
-
+        .word-display { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 100%; }
+        .word-line { display: flex; justify-content: center; gap: 0.6rem; }
+        .letter-placeholder {
+            width: var(--letter-box-size, 40px);
+            height: calc(var(--letter-box-size, 40px) * 1.25);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: calc(var(--letter-box-size, 40px) * 0.5);
+            font-weight: 700;
+            color: var(--primary-color);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-bottom: 3px solid var(--letterbox-border);
+            box-shadow: var(--letterbox-glow);
+            transition: all 0.2s ease;
+        }
         .keyboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(38px, 1fr)); gap: 0.5rem; width: 100%; }
         .keyboard button { padding: 0; width: 100%; height: 48px; font-size: 1.2rem; }
         .keyboard button:disabled { background-image: var(--accent-gradient); color: white; opacity: 0.5; }
-        
         .modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-container.show { display: flex; animation: fadeIn 0.3s; }
         .modal-content { background: var(--glass-bg); padding: 2.5rem; border-radius: var(--border-radius-main); text-align: center; display: flex; flex-direction: column; gap: 1.5rem; width: 90%; max-width: 450px; border: 1px solid var(--glass-border); box-shadow: 0 8px 32px 0 var(--shadow-color); }
+        
+        /* === TASARIM YERLEŞİM KURALLARI === */
+        .game-header-bar {
+            min-height: auto;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+        }
+        /* Ana Menü Yerleşimi */
+        .game-container:not([data-game-mode]) .game-header-bar {
+            border-bottom: none;
+            margin-bottom: 1rem;
+            justify-content: space-between;
+        }
+        .game-container:not([data-game-mode]) .header-center,
+        .game-container:not([data-game-mode]) #game-stats,
+        .game-container:not([data-game-mode]) #extra-life-btn,
+        .game-container:not([data-game-mode]) #restart-btn,
+        .game-container:not([data-game-mode]) #home-btn,
+        .game-container:not([data-game-mode]) #history-btn {
+            display: none;
+        }
+        /* 2 Kişilik Mod Yerleşimi */
+        .game-container[data-game-mode="2p"] .game-header-bar {
+            display: grid;
+            grid-template-areas:
+                "left right"
+                "stats stats";
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 1.25rem;
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .game-container[data-game-mode="2p"] .header-left {
+            grid-area: left;
+            justify-self: start;
+        }
+        .game-container[data-game-mode="2p"] .header-right {
+            grid-area: right;
+            justify-self: end;
+        }
+        .game-container[data-game-mode="2p"] #game-stats {
+            grid-area: stats;
+            justify-self: center;
+        }
+        .game-container[data-game-mode="2p"] .header-center { display: none; }
+        .game-container[data-game-mode="2p"] #scoreboard {
+            padding-top: 1.25rem;
+            margin-top: -1rem;
+        }
+        /* PC Modu Yerleşimi */
+        .game-container[data-game-mode="pc"] .game-header-bar {
+            display: grid;
+            grid-template-areas:
+                "left stats right"
+                "extra-life extra-life extra-life";
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+        }
+        .game-container[data-game-mode="pc"] .header-left { grid-area: left; justify-content: flex-start; }
+        .game-container[data-game-mode="pc"] .header-center { display: none; }
+        .game-container[data-game-mode="pc"] #game-stats { grid-area: stats; }
+        .game-container[data-game-mode="pc"] .header-right { grid-area: right; justify-content: flex-end; }
+        .game-container[data-game-mode="pc"] #extra-life-btn {
+            grid-area: extra-life;
+            justify-self: center;
+            margin-top: 0.5rem;
+        }
+        
+        /* Hangi modda hangi butonların görüneceğini ayarlar */
+        #restart-btn, #home-btn, #history-btn, #extra-life-btn, #lang-btn-wrapper {
+            display: none;
+        }
+        .game-container:not([data-game-mode]) #lang-btn-wrapper { display: block; }
+        .game-container[data-game-mode] #home-btn { display: flex; }
+        .game-container[data-game-mode="2p"] #history-btn { display: flex; }
+        .game-container[data-game-mode="pc"] #restart-btn { display: flex; }
+        .game-container[data-game-mode="pc"] #extra-life-btn { display: flex; }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <div class="game-header-bar"> <button class="control-btn" id="extra-life-btn" aria-label="Ekstra Hak" style="visibility: hidden;">+1 ❤️</button> <div class="game-stats" id="game-stats" style="visibility: hidden;"> <span id="mistake-counter" data-key="mistakes_label">Hata: 0/6</span> <span id="timer" style="display: none;">00:00</span> </div> <div class="controls"> <div style="position: relative;" id="lang-btn-wrapper"> <button class="control-btn" id="lang-select-btn" aria-label="Dil Değiştir">🌐</button> <ul class="language-menu" id="language-menu"></ul> </div> <button class="control-btn" id="restart-btn" aria-label="Yeniden Başlat" style="visibility: hidden;">🔄</button> <button class="control-btn" id="home-btn" aria-label="Ana Menü" style="visibility: hidden;">🏠</button> <button class="control-btn" id="history-btn" aria-label="Skor Geçmişi" style="visibility: hidden;">🏆</button> <button class="control-btn" id="theme-toggle-btn" aria-label="Tema Değiştir">🎨</button> <button class="control-btn" id="sound-toggle-btn" aria-label="Ses Değiştir">🔊</button> </div> </div>
-        <div class="screen-wrapper"> <div id="mode-selection-screen" class="screen active"> <h1 data-key="game_title">Adam Asmaca</h1> <div class="mode-buttons"> <button id="vs-pc-btn" data-key="vs_pc">PC'ye Karşı</button> <button id="two-player-btn" data-key="two_player">2 Kişilik Mod</button> </div> </div> <div id="player-names-screen" class="screen"> <h2 data-key="setup_tournament_title">Turnuva Ayarları</h2> <form id="player-names-form" class="setup-form"> <div class="form-group"> <input type="text" id="player1-name-input" data-key-placeholder="player1_name_placeholder" required> </div> <div class="form-group"> <input type="text" id="player2-name-input" data-key-placeholder="player2_name_placeholder" required> </div> <div class="form-group"> <label for="round-select" data-key="rounds_label">Raund Sayısı:</label> <select id="round-select"> <option value="2" data-key="rounds_2">2 Raund</option> <option value="4" data-key="rounds_4">4 Raund</option> <option value="6" selected data-key="rounds_6">6 Raund</option> <option value="8" data-key="rounds_8">8 Raund</option> <option value="10" data-key="rounds_10">10 Raund</option> </select> </div> <button type="submit" class="btn-primary" data-key="start_tournament_btn">Turnuvayı Başlat</button> <button type="button" id="back-to-menu-btn" class="btn-secondary" data-key="back_btn">Geri Dön</button> </form> </div> <div id="word-setup-screen" class="screen"> <h2 id="word-setup-title"></h2> <form id="word-setup-form" class="setup-form"> <select id="category-select" required> <option value="" disabled selected data-key="select_category">Kategori Seçin</option> <option value="cat_celebrity" data-key="cat_celebrity">Ünlü İsmi</option> <option value="cat_city" data-key="cat_city">Şehir</option> <option value="cat_country" data-key="cat_country">Ülke</option> <option value="cat_animal" data-key="cat_animal">Hayvan</option> <option value="cat_movie" data-key="cat_movie">Film Adı</option> <option value="custom" data-key="cat_custom">Diğer...</option> </select> <input type="text" id="custom-category-input" data-key-placeholder="custom_category_placeholder"> <input type="password" id="word-input" data-key-placeholder="word_input_placeholder" required> <button type="submit" class="btn-primary" data-key="start_round_btn">Raundu Başlat</button> <button type="button" id="back-to-names-btn" class="btn-secondary" data-key="back_to_settings_btn">Ayarlara Geri Dön</button> </form> </div> <div id="game-screen" class="screen"> <div id="scoreboard"></div> <div id="category-display-game"></div> <div class="hangman-box"> <svg height="250" width="200" class="hangman-svg"> <line x1="60" y1="20" x2="140" y2="20" /><line x1="140" y1="20" x2="140" y2="50" /><line x1="60" y1="20" x2="60" y2="230" /><line x1="20" y1="230" x2="100" y2="230" /> <circle cx="140" cy="70" r="20" class="hangman-part" /><line x1="140" y1="90" x2="140" y2="150" class="hangman-part" /><line x1="140" y1="120" x2="110" y2="100" class="hangman-part" /><line x1="140" y1="120" x2="170" y2="100" class="hangman-part" /><line x1="140" y1="150" x2="110" y2="180" class="hangman-part" /><line x1="140" y1="150" x2="170" y2="180" class="hangman-part" /> </svg> </div> <div id="word-display" class="word-display"></div> <div id="keyboard" class="keyboard"></div> <p id="player-prompt"></p> </div> </div>
+        <div class="game-header-bar">
+            <div class="header-left">
+                <div style="position: relative;" id="lang-btn-wrapper">
+                    <button class="control-btn" id="lang-select-btn" aria-label="Dil Değiştir">🌐</button>
+                    <ul class="language-menu" id="language-menu"></ul>
+                </div>
+                <button class="control-btn" id="restart-btn" aria-label="Yeniden Başlat">🔄</button>
+                <button class="control-btn" id="home-btn" aria-label="Ana Menü">🏠</button>
+                <button class="control-btn" id="history-btn" aria-label="Skor Geçmişi">🏆</button>
+            </div>
+            <div class="header-center"></div>
+            <div class="header-right">
+                <button class="control-btn" id="theme-toggle-btn" aria-label="Tema Değiştir">🎨</button>
+                <button class="control-btn" id="sound-toggle-btn" aria-label="Ses Değiştir">🔊</button>
+            </div>
+            <div id="game-stats" style="visibility: hidden">
+                <span id="mistake-counter" data-key="mistakes_label">Hata: 0/6</span>
+                <span id="timer" style="display: none;">00:10</span>
+            </div>
+            <button class="control-btn" id="extra-life-btn" aria-label="Ekstra Hak">+1 ❤️</button>
+        </div>
+        <div class="screen-wrapper"> 
+            <div id="mode-selection-screen" class="screen active">
+                <h1 data-key="game_title">Adam Asmaca</h1>
+                <div class="mode-buttons">
+                    <button id="vs-pc-btn" data-key="vs_pc">PC'ye Karşı</button>
+                    <button id="two-player-btn" data-key="two_player">2 Kişilik Mod</button>
+                </div>
+            </div>
+            <div id="player-names-screen" class="screen">
+                 <h2 data-key="setup_tournament_title">Turnuva Ayarları</h2> <form id="player-names-form" class="setup-form"> <div class="form-group"> <input type="text" id="player1-name-input" data-key-placeholder="player1_name_placeholder" required> </div> <div class="form-group"> <input type="text" id="player2-name-input" data-key-placeholder="player2_name_placeholder" required> </div> <div class="form-group"> <label for="round-select" data-key="rounds_label">Raund Sayısı:</label> <select id="round-select"> <option value="2" data-key="rounds_2">2 Raund</option> <option value="4" data-key="rounds_4">4 Raund</option> <option value="6" selected data-key="rounds_6">6 Raund</option> <option value="8" data-key="rounds_8">8 Raund</option> <option value="10" data-key="rounds_10">10 Raund</option> </select> </div> <button type="submit" class="btn-primary" data-key="start_tournament_btn">Turnuvayı Başlat</button> <button type="button" id="back-to-menu-btn" class="btn-secondary" data-key="back_btn">Geri Dön</button> </form>
+            </div>
+            <div id="word-setup-screen" class="screen">
+                 <h2 id="word-setup-title"></h2> <form id="word-setup-form" class="setup-form"> <select id="category-select" required> <option value="" disabled selected data-key="select_category">Kategori Seçin</option> <option value="cat_celebrity" data-key="cat_celebrity">Ünlü İsmi</option> <option value="cat_city" data-key="cat_city">Şehir</option> <option value="cat_country" data-key="cat_country">Ülke</option> <option value="cat_animal" data-key="cat_animal">Hayvan</option> <option value="cat_movie" data-key="cat_movie">Film Adı</option> <option value="custom" data-key="cat_custom">Diğer...</option> </select> <input type="text" id="custom-category-input" data-key-placeholder="custom_category_placeholder"> <input type="password" id="word-input" data-key-placeholder="word_input_placeholder" required> <button type="submit" class="btn-primary" data-key="start_round_btn">Raundu Başlat</button> <button type="button" id="back-to-names-btn" class="btn-secondary" data-key="back_to_settings_btn">Ayarlara Geri Dön</button> </form>
+            </div>
+            <div id="game-screen" class="screen">
+                <div id="scoreboard"></div>
+                <div id="category-display-game"></div>
+                <div class="hangman-box">
+                    <svg height="250" width="200" class="hangman-svg"> <line x1="60" y1="20" x2="140" y2="20" /><line x1="140" y1="20" x2="140" y2="50" /><line x1="60" y1="20" x2="60" y2="230" /><line x1="20" y1="230" x2="100" y2="230" /> <circle cx="140" cy="70" r="20" class="hangman-part" /><line x1="140" y1="90" x2="140" y2="150" class="hangman-part" /><line x1="140" y1="120" x2="110" y2="100" class="hangman-part" /><line x1="140" y1="120" x2="170" y2="100" class="hangman-part" /><line x1="140" y1="150" x2="110" y2="180" class="hangman-part" /><line x1="140" y1="150" x2="170" y2="180" class="hangman-part" /> </svg>
+                </div>
+                <div id="word-display" class="word-display"></div>
+                <div id="keyboard" class="keyboard"></div>
+                <p id="player-prompt"></p>
+            </div>
+        </div>
     </div>
     <div id="result-modal" class="modal-container"> <div class="modal-content"> <h2 id="result-message"></h2> <p id="correct-word-display"></p> <div class="modal-buttons"> <button id="next-action-btn"></button> <button id="main-menu-btn" data-key="main_menu_btn">Ana Menü</button> </div> </div> </div> <div id="history-modal" class="modal-container"> <div class="modal-content"> <h2 id="history-title" data-key="score_history_title">Skor Geçmişi</h2> <div id="history-details"></div> <button id="close-history-btn" data-key="close_btn">Kapat</button> </div> </div> <div id="extra-life-modal" class="modal-container"> <div class="modal-content"> <h2 data-key="extra_life_title">+1 Ekstra Hak Kazan</h2> <p data-key="extra_life_desc">Kısa bir reklam izleyerek bir şans daha elde edebilirsin.</p> <div class="modal-buttons"> <button id="watch-ad-btn" class="btn-primary" data-key="watch_ad_btn">Reklam İzle</button> <button id="continue-game-btn" class="btn-secondary" data-key="no_thanks_btn">İstemiyorum</button> </div> </div> </div> <div id="confirm-home-modal" class="modal-container"> <div class="modal-content"> <h2 data-key="confirm_home_title">Ana Menüye Dön?</h2> <p data-key="confirm_home_desc">Mevcut oyun ilerlemeniz kaybolacak. Emin misiniz?</p> <div class="modal-buttons"> <button id="confirm-home-yes-btn" class="btn-primary" data-key="yes_btn">Evet, Dön</button> <button id="confirm-home-no-btn" class="btn-secondary" data-key="no_btn">Hayır, Kal</button> </div> </div> </div> <div id="confirm-restart-modal" class="modal-container"> <div class="modal-content"> <h2 data-key="confirm_restart_title">Oyunu Yeniden Başlat?</h2> <p data-key="confirm_restart_desc">Mevcut kelime iptal edilecek ve yeni bir kelime sorulacak.</p> <div class="modal-buttons"> <button id="confirm-restart-yes-btn" class="btn-primary" data-key="yes_restart_btn">Evet, Yeniden Başlat</button> <button id="confirm-restart-no-btn" class="btn-secondary" data-key="no_cancel_btn">Hayır, Vazgeç</button> </div> </div> </div>
 
     <script>
         (() => {
             const dom = {
-                // ... (tüm dom elementleri)
+                gameContainer: document.querySelector('.game-container'),
                 body: document.body, screens: document.querySelectorAll('.screen'), modeSelectionScreen: document.getElementById('mode-selection-screen'),
                 playerNamesScreen: document.getElementById('player-names-screen'), playerNamesForm: document.getElementById('player-names-form'),
                 p1NameInput: document.getElementById('player1-name-input'), p2NameInput: document.getElementById('player2-name-input'),
@@ -202,8 +324,8 @@
                     fr: { game_title:"Le Pendu", vs_pc:"Contre l'IA", two_player:"Mode 2 Joueurs", setup_tournament_title:"Configuration du Tournoi", player1_name_placeholder:"Nom Joueur 1", player2_name_placeholder:"Nom Joueur 2", rounds_label:"Nombre de Manches :", rounds_2:"2 Manches", rounds_4:"4 Manches", rounds_6:"6 Manches", rounds_8:"8 Manches", rounds_10:"10 Manches", start_tournament_btn:"Démarrer le Tournoi", back_btn:"Retour", word_setup_title:"{player}, définis le mot... (Manche {round}/{max})", select_category:"Choisir une catégorie", cat_celebrity:"Célébrité", cat_city:"Ville", cat_country:"Pays", cat_animal:"Animal", cat_movie:"Film", cat_custom:"Autre...", custom_category_placeholder:"Entrez la catégorie...", word_input_placeholder:"Entrez le mot...", start_round_btn:"Démarrer la Manche", back_to_settings_btn:"Retour aux réglages", mistakes_label:"Erreurs :", category_label:"Catégorie :", player_prompt_pc:"Essayez de trouver le mot !", player_prompt_2p:"{player}, sois rapide et prudent pour les points !", main_menu_btn:"Menu Principal", new_game_btn:"Nouveau Jeu", next_round_btn:"Manche Suivante", game_over_btn:"Fin de partie ! Voir les résultats", new_tournament_btn:"Nouveau Tournoi", score_history_title:"Historique des scores", close_btn:"Fermer", extra_life_title:"+1 Vie Supplémentaire", extra_life_desc:"Regardez une courte publicité pour obtenir une autre chance.", watch_ad_btn:"Regarder la pub", no_thanks_btn:"Non, merci", confirm_home_title:"Retourner au menu principal ?", confirm_home_desc:"Votre progression actuelle sera perdue. Êtes-vous sûr ?", yes_btn:"Oui, retourner", no_btn:"Non, rester", confirm_restart_title:"Recommencer la partie ?", confirm_restart_desc:"Le mot actuel sera annulé et un nouveau sera choisi.", yes_restart_btn:"Oui, recommencer", no_cancel_btn:"Non, annuler", alert_no_word_cat:"Veuillez entrer un mot et sélectionner une catégorie !", win_message:"Félicitations, vous avez gagné !", lose_message:"Vous avez perdu !", correct_word_was:"Le mot correct était :", round_end_win:"Génial ! Vous avez gagné {score} points !", round_end_lose:"Vous avez raté ! 0 Points.", game_over_title:"Fin de la partie !", winner_is:"{player} gagne !", tie_game:"Égalité !", final_scores:"Scores finaux :" }
                 },
                 pcWordDatabase: {
-                    tr: { cat_country: ["TÜRKİYE", "ALMANYA", "JAPONYA", "BREZİLYA", "KANADA", "AVUSTRALYA", "YUNANİSTAN", "İSPANYA", "İTALYA", "FRANSA", "İNGİLTERE", "RUSYA", "ÇİN", "HİNDİSTAN", "MEKSİKA", "ARJANTİN", "MISIR", "NORVEÇ", "İSVEÇ", "FİNLANDİYA", "PORTEKİZ", "HOLLANDA", "BELÇİKA", "AVUSTURYA", "İSVİÇRE", "POLONYA", "MACARİSTAN", "ROMANYA", "UKRAYNA", "İRAN", "IRAK", "SURİYE", "LÜBNAN", "ÜRDÜN", "İSRAİL", "FİLİSTİN", "SUUDİ ARABİSTAN", "KATAR", "KUVEYT", "ENDONEZYA", "MALEZYA", "TAYLAND", "VİETNAM", "GÜNEY KORE", "ŞİLİ", "PERU", "KOLOMBİYA", "VENEZUELA", "NİJERYA", "GÜNEY AFRİKA"], cat_city: ["İSTANBUL", "ANKARA", "İZMİR", "BURSA", "ADANA", "GAZİANTEP", "KONYA", "ANTALYA", "DİYARBAKIR", "KAYSERİ", "MERSİN", "ESKİŞEHİR", "DENİZLİ", "SAMSUN", "ŞANLIURFA", "MALATYA", "ERZURUM", "VAN", "TRABZON", "SİVAS", "EDİRNE", "MUĞLA", "AYDIN", "BALIKESİR", "MANİSA", "KOCAELİ", "SAKARYA", "PARİS", "LONDRA", "ROMA", "BERLİN", "MOSKOVA", "TOKYO", "PEKİN", "KAHİRE", "NEW YORK", "LOS ANGELES", "SYDNEY", "MADRİD", "ATİNA", "AMSTERDAM", "VİYANA", "PRAG", "BUDAPEŞTE", "VARŞOVA", "STOKHOLM", "OSLO", "HELSİNKİ", "KOPENHAG", "LİZBON"], cat_animal: ["ASLAN", "KAPLUMBAĞA", "PENGUEN", "ZÜRAFA", "KANGURU", "YUNUS", "FİL", "MAYMUN", "KELEBEK", "KÖPEK", "KEDİ", "AT", "EŞEK", "İNEK", "KOYUN", "KEÇİ", "TAVUK", "HOROZ", "ÖRDEK", "BALIK", "YILAN", "TİMSAH", "KERTENKELE", "FARE", "SİNCAP", "TAVŞAN", "AYI", "KURT", "TİLKİ", "GEYİK", "ZEBRA", "PANDA", "KOALA", "DEVE", "BALİNA", "FOK", "KARTAL", "ŞAHİN", "BAYKUŞ", "PAPAĞAN", "GÜVERCİN", "KARINCA", "ARI", "SİVRİSİNEK", "ÇEKİRGE", "ÖRÜMCEK", "AKREP", "YENGEÇ", "İSTAKOZ", "AHTAPOT"], cat_movie: ["BABA", "ESARETİN BEDELİ", "YÜZÜKLERİN EFENDİSİ", "KARANLIK ŞÖVALYE", "HABABAM SINIFI", "EŞKIYA", "GORA", "VİZONTELE", "BABAM VE OĞLUM", "KIŞ UYKUSU", "MATRIX", "FORREST GUMP", "TİTANİK", "GLADYATÖR", "YEŞİL YOL", "UCUZ ROMAN", "DÖVÜŞ KULÜBÜ", "BAŞLANGIÇ", "YILDIZLARARASI", "PARAZİT", "JOKER", "AVATAR", "YENİLMEZLER", "ASLAN KRAL", "GELECEĞE DÖNÜŞ", "PİYANİST", "HIZLI VE ÖFKELİ", "KARAYİP KORSANLARI", "HARRY POTTER", "AÇLIK OYUNLARI", "YEDİ", "ZİNDAN ADASI", "PRESTİJ", "AKIL OYUNLARI", "CAN DOSTUM", "ÜÇ İDİOT", "AMELIE", "SELVİ BOYLUM AL YAZMALIM", "NEŞELİ GÜNLER", "TOSUN PAŞA", "SÜT KARDEŞLER"], cat_celebrity: ["CEM YILMAZ", "SEZEN AKSU", "TARKAN", "AZİZ SANCAR", "MUSTAFA KEMAL ATATÜRK", "BARIŞ MANÇO", "KEMAL SUNAL", "ŞENER ŞEN", "ADİLE NAŞİT", "MÜNİR ÖZKUL", "ZEKİ MÜREN", "AJDA PEKKAN", "NURİ BİLGE CEYLAN", "ORHAN PAMUK", "FATİH SULTAN MEHMET", "MİMAR SİNAN", "MEVLANA", "YUNUS EMRE", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MOZART", "BEETHOVEN", "PİCASSO", "SALVADOR DALİ", "CHARLIE CHAPLIN", "MARILYN MONROE", "ELVIS PRESLEY", "MICHAEL JACKSON", "MADONNA", "FREDDIE MERCURY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "NEIL ARMSTRONG", "MARIE CURIE", "WILLIAM SHAKESPEARE", "PLATON", "ARİSTO", "SOKRATES", "NAPOLYON BONAPART", "JÜL SEZAR", "KRİSTOF KOLOMB", "VASCO DA GAMA"] },
-                    en: { cat_country: ["UNITED STATES", "CANADA", "AUSTRALIA", "BRAZIL", "JAPAN", "UNITED KINGDOM", "GERMANY", "FRANCE", "ITALY", "SPAIN", "RUSSIA", "CHINA", "INDIA", "MEXICO", "ARGENTINA", "EGYPT", "SOUTH AFRICA", "NIGERIA", "SWEDEN", "NORWAY", "FINLAND", "GREECE", "TURKEY", "POLAND", "NETHERLANDS", "BELGIUM", "PORTUGAL", "SWITZERLAND", "AUSTRIA", "IRELAND", "NEW ZEALAND", "SOUTH KOREA", "THAILAND", "VIETNAM", "INDONESIA", "MALAYSIA", "PHILIPPINES", "PAKISTAN", "IRAN", "IRAQ", "SAUDI ARABIA", "ISRAEL", "CHILE", "PERU", "COLOMBIA", "VENEZUELA", "CUBA", "JAMAICA", "KENYA", "ETHIOPIA"], cat_city: ["LONDON", "PARIS", "TOKYO", "NEW YORK", "SYDNEY", "ROME", "CAIRO", "MOSCOW", "BEIJING", "BERLIN", "MADRID", "ATHENS", "ISTANBUL", "DUBAI", "SINGAPORE", "HONG KONG", "BANGKOK", "SEOUL", "LOS ANGELES", "CHICAGO", "TORONTO", "VANCOUVER", "MEXICO CITY", "RIO DE JANEIRO", "BUENOS AIRES", "LIMA", "BOGOTA", "AMSTERDAM", "BRUSSELS", "VIENNA", "PRAGUE", "BUDAPEST", "WARSAW", "STOCKHOLM", "OSLO", "COPENHAGEN", "HELSINKI", "DUBLIN", "LISBON", "MUMBAI", "DELHI", "SHANGHAI", "SAO PAULO", "LAGOS", "JOHANNESBURG", "NAIROBI", "JAKARTA", "MANILA", "KUALA LUMPUR", "TEHRAN"], cat_animal: ["LION", "TURTLE", "ELEPHANT", "DOLPHIN", "PENGUIN", "GIRAFFE", "MONKEY", "BUTTERFLY", "DOG", "CAT", "HORSE", "COW", "SHEEP", "GOAT", "CHICKEN", "PIG", "TIGER", "BEAR", "WOLF", "FOX", "DEER", "RABBIT", "SQUIRREL", "MOUSE", "SNAKE", "CROCODILE", "LIZARD", "FISH", "WHALE", "SHARK", "OCTOPUS", "SEAL", "EAGLE", "OWL", "PARROT", "SPARROW", "PIGEON", "ANT", "BEE", "SPIDER", "SCORPION", "CRAB", "LOBSTER", "KANGAROO", "KOALA", "PANDA", "RHINOCEROS", "HIPPOPOTAMUS", "ZEBRA", "CAMEL"], cat_movie: ["THE GODFATHER", "STAR WARS", "PULP FICTION", "TITANIC", "THE MATRIX", "AVATAR", "THE SHAWSHANK REDEMPTION", "THE DARK KNIGHT", "FORREST GUMP", "INCEPTION", "JURASSIC PARK", "THE LION KING", "AVENGERS ENDGAME", "LORD OF THE RINGS", "FIGHT CLUB", "THE SILENCE OF THE LAMBS", "SCHINDLERS LIST", "GOODFELLAS", "SEVEN", "THE USUAL SUSPECTS", "SAVING PRIVATE RYAN", "GLADIATOR", "ALIEN", "BLADE RUNNER", "BACK TO THE FUTURE", "INDIANA JONES", "JAWS", "THE EXORCIST", "PSYCHO", "CASABLANCA", "GONE WITH THE WIND", "THE WIZARD OF OZ", "CITIZEN KANE", "INTERSTELLAR", "PARASITE", "JOKER", "LA LA LAND", "THE REVENANT", "MAD MAX FURY ROAD", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "MADONNA", "MICHAEL JACKSON", "LEONARDO DICAPRIO", "BEYONCE", "ELVIS PRESLEY", "MARILYN MONROE", "TOM HANKS", "MERYL STREEP", "WILLIAM SHAKESPEARE", "ISAAC NEWTON", "MARTIN LUTHER KING", "NELSON MANDELA", "QUEEN ELIZABETH", "BARACK OBAMA", "OPRAH WINFREY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "JEFF BEZOS", "MARK ZUCKERBERG", "MUHAMMAD ALI", "MICHAEL JORDAN", "TIGER WOODS", "SERENA WILLIAMS", "LEBRON JAMES", "THE BEATLES", "THE ROLLING STONES", "BOB DYLAN", "JIMI HENDRIX", "ARETHA FRANKLIN", "STEVEN SPIELBERG", "QUENTIN TARANTINO", "MARTIN SCORSESE", "ALFRED HITCHCOCK", "WALT DISNEY", "CHARLIE CHAPLIN", "MARIE CURIE", "GALILEO GALILEI", "CHARLES DARWIN", "ABRAHAM LINCOLN", "WINSTON CHURCHILL", "JULIUS CAESAR", "CLEOPATRA", "JOAN OF ARC"] },
+                    tr: { cat_country: ["TÜRKİYE", "ALMANYA", "JAPONYA", "BREZİLYA", "KANADA", "AVUSTRALYA", "YUNANİSTAN", "İSPANYA", "İTALYA", "FRANSA", "İNGİLTERE", "RUSYA", "ÇİN", "HİNDİSTAN", "MEKSİKA", "ARJANTİN", "MISIR", "NORVEÇ", "İSVEÇ", "FİNLANDİYA", "PORTEKİZ", "HOLLANDA", "BELÇİKA", "AVUSTURYA", "İSVİÇRE", "POLONYA", "MACARİSTAN", "ROMANYA", "UKRAYNA", "İRAN", "IRAK", "SURİYE", "LÜBNAN", "ÜRDÜN", "İSRAİL", "FİLİSTİN", "SUUDİ ARABİSTAN", "KATAR", "KUVEYT", "ENDONEZYA", "MALEZYA", "TAYLAND", "VİETNAM", "GÜNEY KORE", "ŞİLİ", "PERU", "KOLOMBİYA", "VENEZUELA", "NİJERYA", "GÜNEY AFRİKA"], cat_city: ["İSTANBUL", "ANKARA", "İZMİR", "BURSA", "ADANA", "GAZİANTEP", "KONYA", "ANTALYA", "DİYARBAKIR", "KAYSERİ", "MERSİN", "ESKİŞEHİR", "DENİZLİ", "SAMSUN", "ŞANLIURFA", "MALATYA", "ERZURUM", "VAN", "TRABZON", "SİVAS", "EDİRNE", "MUĞLA", "AYDIN", "BALIKESİR", "MANİSA", "KOCAELİ", "SAKARYA", "PARİS", "LONDRA", "ROMA", "BERLİN", "MOSKOVA", "TOKYO", "PEKİN", "KAHİRE", "NEW YORK", "LOS ANGELES", "SYDNEY", "MADRİD", "ATİNA", "AMSTERDAM", "VİYANA", "PRAG", "BUDAPEŞTE", "VARŞOVA", "STOKHOLM", "OSLO", "HELSİNKİ", "KOPENHAG", "LİZBON"], cat_animal: ["ASLAN", "KAPLUMBAĞA", "PENGUEN", "ZÜRAFA", "KANGURU", "YUNUS", "FİL", "MAYMUN", "KELEBEK", "KÖPEK", "KEDİ", "AT", "EŞEK", "İNEK", "KOYUN", "KEÇİ", "TAVUK", "HOROZ", "ÖRDEK", "BALIK", "YILAN", "TİMSAH", "KERTENKELE", "FARE", "SİNCAP", "TAVŞAN", "AYI", "KURT", "TİLKİ", "GEYİK", "ZEBRA", "PANDA", "KOALA", "DEVE", "BALİNA", "FOK", "KARTAL", "ŞAHİN", "BAYKUŞ", "PAPAĞAN", "GÜVERCİN", "KARINCA", "ARI", "SİVRİSİNEK", "ÇEKİRGE", "ÖRÜMCEK", "AKREP", "YENGEÇ", "İSTAKOZ", "AHTAPOT"], cat_movie: ["BABA", "ESARETİN BEDELİ", "YÜZÜKLERİN EFENDİSİ", "KARANLIK ŞÖVALYE", "HABABAM SINIFI", "EŞKIYA", "GORA", "VİZONTELE", "BABAM VE OĞLUM", "KIŞ UYKUSU", "MATRIX", "FORREST GUMP", "TİTANİK", "GLADYATÖR", "YEŞİL YOL", "UCUZ ROMAN", "DÖVÜŞ KULÜBÜ", "BAŞLANGİÇ", "YILDIZLARARASI", "PARAZİT", "JOKER", "AVATAR", "YENİLMEZLER", "ASLAN KRAL", "GELECEĞE DÖNÜŞ", "PİYANİST", "HIZLI VE ÖFKELİ", "KARAYİP KORSANLARI", "HARRY POTTER", "AÇLIK OYUNLARI", "YEDİ", "ZİNDAN ADASI", "PRESTİJ", "AKIL OYUNLARI", "CAN DOSTUM", "ÜÇ İDİOT", "AMELIE", "SELVİ BOYLUM AL YAZMALIM", "NEŞELİ GÜNLER", "TOSUN PAŞA", "SÜT KARDEŞLER"], cat_celebrity: ["CEM YILMAZ", "SEZEN AKSU", "TARKAN", "AZİZ SANCAR", "MUSTAFA KEMAL ATATÜRK", "BARIŞ MANÇO", "KEMAL SUNAL", "ŞENER ŞEN", "ADİLE NAŞİT", "MÜNİR ÖZKUL", "ZEKİ MÜREN", "AJDA PEKKAN", "NURİ BİLGE CEYLAN", "ORHAN PAMUK", "FATİH SULTAN MEHMET", "MİMAR SİNAN", "MEVLANA", "YUNUS EMRE", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MOZART", "BEETHOVEN", "PİCASSO", "SALVADOR DALİ", "CHARLIE CHAPLIN", "MARILYN MONROE", "ELVIS PRESLEY", "MICHAEL JACKSON", "MADONNA", "FREDDIE MERCURY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "NEIL ARMSTRONG", "MARIE CURIE", "WILLIAM SHAKESPEARE", "PLATON", "ARİSTO", "SOKRATES", "NAPOLYON BONAPART", "JÜL SEZAR", "KRİSTOF KOLOMB", "VASCO DA GAMA"] },
+                    en: { cat_country: ["UNITED STATES", "CANADA", "AUSTRALIA", "BRAZIL", "JAPAN", "UNITED KINGDOM", "GERMANY", "FRANCE", "ITALY", "SPAIN", "RUSSIA", "CHINA", "INDIA", "MEXICO", "ARGENTINA", "EGYPT", "SOUTH AFRICA", "NIGERIA", "SWEDEN", "NORWAY", "FINLAND", "GREECE", "TURKEY", "POLAND", "NETHERLANDS", "BELGIUM", "PORTUGAL", "SWITZERLAND", "AUSTRIA", "IRELAND", "NEW ZEALAND", "SOUTH KOREA", "THAILAND", "VIETNAM", "INDONESIA", "MALAYSIA", "PHILIPPINES", "PAKISTAN", "IRAN", "IRAQ", "SAUDI ARABIA", "ISRAEL", "CHILE", "PERU", "COLOMBIA", "VENEZUELA", "CUBA", "JAMAICA", "KENYA", "ETHIOPIA"], cat_city: ["LONDON", "PARIS", "TOKYO", "NEW YORK", "SYDNEY", "ROME", "CAIRO", "MOSCOW", "BEIJING", "BERLIN", "MADRID", "ATHENS", "ISTANBUL", "DUBAI", "SINGAPORE", "HONG KONG", "BANGKOK", "SEOUL", "LOS ANGELES", "CHICAGO", "TORONTO", "VANCOUVER", "MEXICO CITY", "RIO DE JANEiro", "BUENOS AIRES", "LIMA", "BOGOTA", "AMSTERDAM", "BRUSSELS", "VIENNA", "PRAGUE", "BUDAPEST", "WARSAW", "STOCKHOLM", "OSLO", "COPENHAGEN", "HELSINKI", "DUBLIN", "LISBON", "MUMBAI", "DELHI", "SHANGHAI", "SAO PAULO", "LAGOS", "JOHANNESBURG", "NAIROBI", "JAKARTA", "MANILA", "KUALA LUMPUR", "TEHRAN"], cat_animal: ["LION", "TURTLE", "ELEPHANT", "DOLPHIN", "PENGUIN", "GIRAFFE", "MONKEY", "BUTTERFLY", "DOG", "CAT", "HORSE", "COW", "SHEEP", "GOAT", "CHICKEN", "PIG", "TIGER", "BEAR", "WOLF", "FOX", "DEER", "RABBIT", "SQUIRREL", "MOUSE", "SNAKE", "CROCODILE", "LIZARD", "FISH", "WHALE", "SHARK", "OCTOPUS", "SEAL", "EAGLE", "OWL", "PARROT", "SPARROW", "PIGEON", "ANT", "BEE", "SPIDER", "SCORPION", "CRAB", "LOBSTER", "KANGAROO", "KOALA", "PANDA", "RHINOCEROS", "HIPPOPOTAMUS", "ZEBRA", "CAMEL"], cat_movie: ["THE GODFATHER", "STAR WARS", "PULP FICTION", "TITANIC", "THE MATRIX", "AVATAR", "THE SHAWSHANK REDEMPTION", "THE DARK KNIGHT", "FORREST GUMP", "INCEPTION", "JURASSIC PARK", "THE LION KING", "AVENGERS ENDGAME", "LORD OF THE RINGS", "FIGHT CLUB", "THE SILENCE OF THE LAMBS", "SCHINDLERS LIST", "GOODFELLAS", "SEVEN", "THE USUAL SUSPECTS", "SAVING PRIVATE RYAN", "GLADIATOR", "ALIEN", "BLADE RUNNER", "BACK TO THE FUTURE", "INDIANA JONES", "JAWS", "THE EXORCIST", "PSYCHO", "CASABLANCA", "GONE WITH THE WIND", "THE WIZARD OF OZ", "CITIZEN KANE", "INTERSTELLAR", "PARASITE", "JOKER", "LA LA LAND", "THE REVENANT", "MAD MAX FURY ROAD", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "MADONNA", "MICHAEL JACKSON", "LEONARDO DICAPRIO", "BEYONCE", "ELVIS PRESLEY", "MARILYN MONROE", "TOM HANKS", "MERYL STREEP", "WILLIAM SHAKESPEARE", "ISAAC NEWTON", "MARTIN LUTHER KING", "NELSON MANDELA", "QUEEN ELIZABETH", "BARACK OBAMA", "OPRAH WINFREY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "JEFF BEZOS", "MARK ZUCKERBERG", "MUHAMMAD ALI", "MICHAEL JORDAN", "TIGER WOODS", "SERENA WILLIAMS", "LEBRON JAMES", "THE BEATLES", "THE ROLLING STONES", "BOB DYLAN", "JIMI HENDRIX", "ARETHA FRANKLIN", "STEVEN SPIELBERG", "QUENTIN TARANTINO", "MARTIN SCORSESE", "ALFRED HITCHCOCK", "WALT DISNEY", "CHARLIE CHAPLIN", "MARIE CURIE", "GALILEO GALILEI", "CHARLES DARWIN", "ABRAHAM LINCOLN", "WINSTON CHURCHILL", "JULIUS CAESAR", "CLEOPATRA", "JOAN OF ARC"] },
                     es: { cat_country: ["ESPAÑA", "MÉXICO", "ARGENTINA", "COLOMBIA", "PERÚ", "CHILE", "VENEZUELA", "ECUADOR", "GUATEMALA", "CUBA", "BOLIVIA", "HONDURAS", "PARAGUAY", "URUGUAY", "COSTA RICA", "PANAMÁ", "NICARAGUA", "EL SALVADOR", "ITALIA", "FRANCIA", "PORTUGAL", "BRASIL", "ALEMANIA", "ESTADOS UNIDOS", "CANADÁ", "JAPÓN", "CHINA", "RUSIA", "INDIA", "EGIPTO", "MARRUECOS", "PORTUGAL", "GRECIA", "SUECIA", "NORUEGA", "DINAMARCA", "FINLANDIA", "POLONIA", "RUMANÍA", "HUNGRÍA", "AUSTRIA", "BÉLGICA", "PAÍSES BAJOS", "IRLANDA", "SUIZA", "AUSTRALIA", "NUEVA ZELANDA", "SUDÁFRICA", "NIGERIA", "KENIA"], cat_city: ["MADRID", "BARCELONA", "SEVILLA", "VALENCIA", "BILBAO", "BUENOS AIRES", "BOGOTÁ", "LIMA", "SANTIAGO", "CIUDAD DE MÉXICO", "GUADALAJARA", "MONTERREY", "CARACAS", "QUITO", "LA PAZ", "MONTEVIDEO", "ASUNCIÓN", "SAN JOSÉ", "LA HABANA", "PANAMÁ", "LISBOA", "ROMA", "PARİS", "LONDRES", "BERLİN", "ATENAS", "ESTOCOLMO", "OSLO", "COPENHAGUE", "ÁMSTERDAM", "BRUSELAS", "VIENA", "PRAGA", "BUDAPEST", "VARSOVIA", "MOSCÚ", "TOKIO", "PEKİN", "NUEVA YORK", "LOS ÁNGELES", "MIAMI", "RÍO DE JANEIRO", "SÃO PAULO", "CAIRO", "SÍDNEY", "MELBOURNE", "TORONTO", "MONTREAL", "DUBLÍN", "EDIMBURGO"], cat_animal: ["PERRO", "GATO", "CABALLO", "VACA", "OVEJA", "CABRA", "CERDO", "GALLINA", "POLLO", "PATO", "PAVO", "PEZ", "SERPIENTE", "COCODRILO", "LAGARTO", "RATÓN", "ARDILLA", "CONEJO", "OSO", "LOBO", "ZORRO", "CIERVO", "ELEFANTE", "JIRAFA", "CEBRA", "MONO", "GORILA", "TIGRE", "LEÓN", "DELFÍN", "BALLENA", "TIBURÓN", "PULPO", "FOCA", "PINGÜINO", "ÁGUILA", "BÚHO", "LORO", "PALOMA", "HORMIGA", "ABEJA", "ARAÑA", "ESCORPIÓN", "CANGREJO", "LANGOSTA", "MARIPOSA", "CANGURO", "KOALA", "PANDA", "RINOCERONTE", "HIPOPÓTAMO", "CAMELLO"], cat_movie: ["EL PADRINO", "TITANIC", "LA VIDA ES BELLA", "EL REY LEÓN", "VOLVER AL FUTURO", "EL LABERINTO DEL FAUNO", "ROMA", "AMORES PERROS", "EL SECRETO DE SUS OJOS", "RELATOS SALVAJES", "CIUDAD DE DIOS", "PULP FICTION", "FORREST GUMP", "MATRIX", "GLADIADOR", "EL SILENCIO DE LOS CORDEROS", "PARÁSITOS", "JOKER", "COCO", "DIARIOS DE MOTOCICLETA", "TODO SOBRE MI MADRE", "HABLE CON ELLA", "MAR ADENTRO", "EL ORFANATO", "LOS OTROS", "EL HIJO DE LA NOVIA", "NUEVE REINAS", "EL CLUB DE LA PELEA", "LA LISTA DE SCHINDLER", "SALVAR AL SOLDADO RYAN", "EL PIANISTA", "EL VIAJE DE CHIHIRO", "EL CABALLERO OSCURO", "EL SEÑOR DE LOS ANILLOS", "LA GUERRA DE LAS GALAXIAS", "PARQUE JURÁSICO", "AVENGERS", "HARRY POTTER", "EL EXORCISTA", "PSICOSIS", "CASABLANCA"], cat_celebrity: ["PABLO PICASSO", "SHAKIRA", "LIONEL MESSI", "FRIDA KAHLO", "PENÉLOPE CRUZ", "JAVIER BARDEM", "GABRIEL GARCÍA MÁRQUEZ", "CERVANTES", "DIEGO MARADONA", "CHE GUEVARA", "PEDRO ALMODÓVAR", "SALVADOR DALÍ", "ANTONIO BANDERAS", "SOFÍA VERGARA", "ENRIQUE IGLESIAS", "JULIO IGLESIAS", "DIEGO RIVERA", "GARCÍA LORCA", "GAUDÍ", "GOYA", "VELÁZQUEZ", "PLATÓN", "ARISTÓTELES", "SÓCRATES", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MARIE CURIE", "NAPOLEÓN BONAPARTE", "JULIO CÉSAR", "CRISTÓBAL COLÓN", "SIMÓN BOLÍVAR", "FIDEL CASTRO", "PAPA FRANCISCO", "RIGOBERTA MENCHÚ", "GUSTAVO DUDAMEL", "CARLOS GARDEL", "CELIA CRUZ", "TITO PUENTE", "PAU GASOL", "RAFAEL NADAL", "FERNANDO ALONSO", "IKER CASILLAS"] },
                     de: { cat_country: ["DEUTSCHLAND", "ÖSTERREICH", "SCHWEIZ", "FRANKREICH", "ITALIEN", "SPANIEN", "POLEN", "NIEDERLANDE", "BELGIEN", "DÄNEMARK", "SCHWEDEN", "NORWEGEN", "FINNLAND", "GRIECHENLAND", "TÜRKEI", "RUSSLAND", "BRASILIEN", "ARGENTINIEN", "MEXIKO", "KANADA", "USA", "AUSTRALIEN", "JAPAN", "CHINA", "INDIEN", "ÄGYPTEN", "SÜDAFRIKA", "NIGERIA", "KENIA", "MAROKKO", "PORTUGAL", "IRLAND", "UNGARN", "RUMÄNIEN", "TSCHECHIEN", "SLOWAKEI", "KROATIEN", "SERBIEN", "BOSNIEN", "SLOWENIEN", "ALBANIEN", "MAZEDONIEN", "BULGARIEN", "LITAUEN", "LETTLAND", "ESTLAND", "ISLAND", "LUXEMBURG", "LIECHTENSTEIN", "MONACO"], cat_city: ["BERLIN", "MÜNCHEN", "HAMBURG", "KÖLN", "FRANKFURT", "STUTTGART", "DÜSSELDORF", "WIEN", "ZÜRICH", "GENF", "SALZBURG", "INNSBRUCK", "GRAZ", "LINZ", "BASEL", "BERN", "LUZERN", "PARIS", "LONDON", "ROM", "MADRID", "BARCELONA", "AMSTERDAM", "BRÜSSEL", "KOPENHAGEN", "STOCKHOLM", "OSLO", "HELSINKI", "ATHEN", "ISTANBUL", "PRAG", "BUDAPEST", "WARSCHAU", "MOSKAU", "TOKIO", "NEW YORK", "LOS ANGELES", "SYDNEY", "PEKING", "SCHANGHAI", "HONGKONG", "SINGAPUR", "DUBAI", "KAIRO", "JOHANNESBURG", "RIO DE JANEIRO", "BUENOS AIRES", "MEXIKO STADT", "TORONTO"], cat_animal: ["HUND", "KATZE", "PFERD", "KUH", "SCHAF", "ZIEGE", "SCHWEIN", "HUHN", "HAHN", "ENTE", "GANS", "FISCH", "SCHLANGE", "KROKODIL", "ECHSE", "MAUS", "EICHHÖRNCHEN", "HASE", "BÄR", "WOLF", "FUCHS", "HIRSCH", "ELEFANT", "GIRAFFE", "ZEBRA", "AFFE", "GORILLA", "TIGER", "LÖWE", "DELFIN", "WAL", "HAI", "KRAKE", "ROBBE", "PINGUIN", "ADLER", "EULE", "PAPAGEI", "TAUBE", "AMEISE", "BIENE", "SPINNE", "SKORPION", "KREBS", "HUMMER", "SCHMETTERLING", "KÄNGURU", "KOALA", "PANDA", "NASHORN", "FLUSSPFERD", "KAMEL"], cat_movie: ["DAS BOOT", "LOLA RENNT", "DAS LEBEN DER ANDEREN", "GOOD BYE LENIN", "DER UNTERGANG", "DIE WELLE", "DAS WEISSE BAND", "METROPOLIS", "NOSFERATU", "DIE BLECHTROMMEL", "HIMMEL ÜBER BERLIN", " Aguirre, DER ZORN GOTTES", "FITZCARRALDO", "M", "DER BLAUE ENGEL", "DIE FETTEN JAHRE SIND VORBEI", "VIER MINUTEN", "TONI ERDMANN", "WERK OHNE AUTOR", "IM WESTEN NICHTS NEUES", "DER NAME DER ROSE", "CHRISTIANE F", "DIE UNENDLICHE GESCHICHTE", "DER BEWEGTE MANN", "KNOCKIN ON HEAVENS DOOR", "ABWÄRTS", "ROSSINI", "SCHTONK", "DAS EXPERIMENT", "DER BAADER MEINHOF KOMPLEX", "DIE FÄLSCHER", "JENSEITS VON AFRIKA", "DER LETZTE KAISER", "DER PIANIST", "INGLOURIOUS BASTERDS", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "JOHANN SEBASTIAN BACH", "LUDWIG VAN BEETHOVEN", "WOLFGANG AMADEUS MOZART", "JOHANN WOLFGANG VON GOETHE", "FRIEDRICH SCHILLER", "IMMANUEL KANT", "GEORG WILHELM FRIEDRICH HEGEL", "FRIEDRICH NIETZSCHE", "ANGELA MERKEL", "KARL MARX", "JOHANNES GUTENBERG", "MARTIN LUTHER", "ALBRECHT DÜRER", "MARLENE DIETRICH", "ROMy SCHNEIDER", "KLAUS KINSKI", "WERNER HERZOG", "WIM WENDERS", "RAINER WERNER FASSBINDER", "HEIDI KLUM", "BORIS BECKER", "STEFFI GRAF", "MICHAEL SCHUMACHER", "FRANZ BECKENBAUER", "HANNAH ARENDT", "BERTOLT BRECHT", "THOMAS MANN", "HERMANN HESSE", "GÜNTER GRASS", "MAX PLANCK", "WERNER HEISENBERG", "ROBERT KOCH", "ALEXANDER VON HUMBOLDT", "JACOB GRIMM", "WILHELM GRIMM", "KARL LAGERFELD", "CLAUDIA SCHIFFER"] },
                     fr: { cat_country: ["FRANCE", "CANADA", "BELGIQUE", "SUISSE", "LUXEMBOURG", "ALGÉRIE", "MAROC", "TUNISIE", "SÉNÉGAL", "CÔTE D'IVOIRE", "ITALIE", "ESPAGNE", "ALLEMAGNE", "ROYAUME-UNI", "ÉTATS-UNIS", "BRÉSIL", "ARGENTINE", "MEXIQUE", "JAPON", "CHINE", "RUSSIE", "INDE", "ÉGYPTE", "GRÈCE", "PORTUGAL", "PAYS-BAS", "DANEMARK", "SUÈDE", "NORVÈGE", "FINLANDE", "POLOGNE", "AUTRICHE", "IRLANDE", "AUSTRALIE", "NOUVELLE-ZÉLANDE", "AFRIQUE DU SUD", "NIGÉRIA", "GHANA", "CAMEROUN", "MADAGASCAR", "VIETNAM", "LIBAN", "HAÏTI", "MONACO", "ANDORRE"], cat_city: ["PARIS", "MARSEILLE", "LYON", "TOULOUSE", "NICE", "NANTES", "STRASBOURG", "MONTPELLIER", "BORDEAUX", "LILLE", "GENÈVE", "BRUXELLES", "MONTRÉAL", "QUÉBEC", "LUXEMBOURG", "MONACO", "ALGER", "CASABLANCA", "TUNIS", "DAKAR", "ROME", "MADRID", "BARCELONE", "LONDRES", "BERLIN", "AMSTERDAM", "LISBONNE", "ATHÈNES", "VIENNE", "PRAGUE", "BUDAPEST", "VARSOVIE", "MOSCOU", "NEW YORK", "LOS ANGELES", "CHICAGO", "TORONTO", "SYDNEY", "TOKYO", "PÉKIN", "CAIRE", "RIO DE JANEIRO", "BUENOS AIRES"], cat_animal: ["CHIEN", "CHAT", "CHEVAL", "VACHE", "MOUTON", "CHÈVRE", "COCHON", "POULE", "COQ", "CANARD", "OIE", "POISSON", "SERPENT", "CROCODILE", "LÉZARD", "SOURIS", "ÉCUREUIL", "LAPIN", "OURS", "LOUP", "RENARD", "CERF", "ÉLÉPHANT", "GIRAFE", "ZÈBRE", "SINGE", "GORILLE", "TIGRE", "LION", "DAUPHIN", "BALEINE", "REQUIN", "PIEUVRE", "PHOQUE", "PINGOUIN", "AIGLE", "HIBOU", "PERROQUET", "PIGEON", "FOURMI", "ABEILLE", "ARAIGNÉE", "SCORPION", "CRABE", "HOMARD", "PAPILLON", "KANGOUROU", "KOALA", "PANDA", "RHINOCÉROS", "HIPPOPOTAME", "CHAMEAU"], cat_movie: ["INTOUCHABLES", "AMÉLIE", "LA HAINE", "LE DÎNER DE CONS", "LE FABULEUX DESTIN D'AMÉLIE POULAIN", "LA VIE EN ROSE", "LE GRAND BLEU", "TAXI", "ASTÉRIX ET OBÉLIX MISSION CLÉOPÂTRE", "LE CINQUIÈME ÉLÉMENT", "LÉON", "NIKITA", "LE PÈRE NOËL EST UNE ORDURE", "LA CHÈVRE", "LES VISITEURS", "LA GRANDE VADROUILLE", "LE CORNIAUD", "LES AVENTURES DE RABBI JACOB", "LA BOUM", "LE PROFESSIONNEL", "UN PROPHÈTE", "LE CONCERT", "LA MÔME", "LE SCAPHANDRE ET LE PAPILLON", "LES CHORISTES", "UN LONG DIMANCHE DE FIANÇAILLES", "LE PACTE DES LOUPS", "LA CITÉ DE LA PEUR", "LES BRONZÉS FONT DU SKI", "LA GUERRE DES BOUTONS", "LE SALAIRE DE LA PEUR", "LES QUATRE CENTS COUPS", "À BOUT DE SOUFFLE", "JULES ET JIM", "LE MÉPRIS", "LE SAMOURAÏ"], cat_celebrity: ["ZINÉDINE ZIDANE", "EDITH PIAF", "MARION COTILLARD", "VICTOR HUGO", "NAPOLÉON BONAPARTE", "LOUIS XIV", "MOLIÈRE", "VOLTAIRE", "ROUSSEAU", "MARIE CURIE", "CHARLES DE GAULLE", "GÉRARD DEPARDIEU", "BRIGITTE BARDOT", "ALAIN DELON", "CATHERINE DENEUVE", "JEAN-PAUL BELMONDO", "LOUIS DE FUNÈS", "JOHNNY HALLYDAY", "CHARLES AZNAVOUR", "SERGE GAINSBOURG", "DAFT PUNK", "DAVID GUETTA", "JEAN RENO", "LUC BESSON", "FRANÇOIS TRUFFAUT", "JEAN-LUC GODARD", "AUGUSTE RENOIR", "CLAUDE MONET", "AUGUSTE RODIN", "GUSTAVE EIFFEL", "BLAISE PASCAL", "RENÉ DESCARTES", "JACQUES COUSTEAU", "COCO CHANEL", "CHRISTIAN DIOR", "YVES SAINT LAURENT", "MICHEL PLATINI", "THIERRY HENRY", "KYLIAN MBAPPÉ", "ANTOINE GRIEZMANN"] }
@@ -213,17 +335,69 @@
             const getTranslation = (key) => { const lang = state.currentLanguage; return (data.languageStrings[lang] && data.languageStrings[lang][key]) || data.languageStrings.en[key] || ''; };
             const updateUIForLanguage = () => { document.documentElement.lang = state.currentLanguage; document.querySelectorAll('[data-key]').forEach(el => { const translation = getTranslation(el.getAttribute('data-key')); if (translation) el.innerText = translation; }); document.querySelectorAll('[data-key-placeholder]').forEach(el => { const translation = getTranslation(el.getAttribute('data-key-placeholder')); if (translation) el.placeholder = translation; }); };
             const populateLanguageMenu = () => { dom.languageMenu.innerHTML = ''; for (const [code, name] of Object.entries(data.languages)) { const li = document.createElement('li'); li.textContent = name; li.dataset.lang = code; if (code === state.currentLanguage) li.classList.add('active'); dom.languageMenu.appendChild(li); } };
-            const showScreen = (screenToShow) => { dom.screens.forEach(s => s.classList.remove('active')); screenToShow.classList.add('active'); const isMenu = screenToShow === dom.modeSelectionScreen; dom.homeBtn.style.visibility = isMenu ? 'hidden' : 'visible'; dom.langBtnWrapper.style.visibility = isMenu ? 'visible' : 'hidden'; };
+            const showScreen = (screenToShow) => {
+                dom.screens.forEach(s => s.classList.remove('active'));
+                screenToShow.classList.add('active');
+            };
             const updateMistakeCounter = () => { dom.mistakeDisplay.textContent = `${getTranslation('mistakes_label')} ${state.wrongGuesses}/${state.maxWrongGuesses}`; };
-            
             const handleGuess = (letter, btn) => { btn.disabled = true; state.guessedLetters.push(letter); if (state.secretWord.includes(letter)) { if (!state.isMuted) correctSound.play().catch(e => {}); renderWordDisplay(); } else { state.wrongGuesses++; updateMistakeCounter(); updateHangmanDrawing(); if (!state.isMuted) errorSound.play().catch(e => {}); } if (state.gameMode === 'pc' && state.wrongGuesses === state.maxWrongGuesses - 1 && !dom.extraLifeBtn.disabled) { dom.extraLifeBtn.classList.add('pulse-danger'); } checkGameStatus(); };
             const checkGameStatus = () => { const isWinner = state.secretWord.split('').every(c => state.guessedLetters.includes(c) || c === ' '); if (isWinner) { if (!state.isMuted) winSound.play().catch(e => {}); if (state.gameMode === '2p') handleRoundEnd(true); else showResultModal(true); } else if (state.wrongGuesses >= state.maxWrongGuesses) { if (!state.isMuted) loseSound.play().catch(e => {}); if (state.gameMode === '2p') handleRoundEnd(false); else showResultModal(false); } };
-            
             const setupPcGame = () => { state.gameMode = 'pc'; dom.extraLifeBtn.disabled = false; dom.extraLifeBtn.classList.remove('pulse-danger'); const db = data.pcWordDatabase[state.currentLanguage] || data.pcWordDatabase.en; const categories = Object.keys(db); const randomCategoryKey = categories[Math.floor(Math.random() * categories.length)]; const randomCategoryText = getTranslation(randomCategoryKey); const words = db[randomCategoryKey]; const randomWord = words[Math.floor(Math.random() * words.length)]; startGame(randomWord, randomCategoryText); };
-            const startGame = (word, category) => { state.secretWord = word.toLocaleUpperCase(state.currentLanguage); state.currentCategoryText = category; state.guessedLetters = []; state.wrongGuesses = 0; dom.historyBtn.style.visibility = (state.gameMode === '2p') ? 'visible' : 'hidden'; dom.extraLifeBtn.style.visibility = (state.gameMode === 'pc') ? 'visible' : 'hidden'; dom.restartBtn.style.visibility = (state.gameMode === 'pc') ? 'visible' : 'hidden'; dom.gameStats.style.visibility = 'visible'; updateMistakeCounter(); if (state.gameMode === '2p') { dom.timerDisplay.style.display = 'inline-block'; dom.scoreboard.style.display = 'flex'; updateScoreboard(); dom.playerPrompt.textContent = getTranslation('player_prompt_2p').replace('{player}', state.currentPlayerGuesser); startTimer(); } else { dom.timerDisplay.style.display = 'none'; dom.scoreboard.style.display = 'none'; dom.playerPrompt.textContent = getTranslation('player_prompt_pc'); } dom.categoryDisplayGame.textContent = `${getTranslation('category_label')} ${state.currentCategoryText}`; renderWordDisplay(); createKeyboard(); updateHangmanDrawing(); showScreen(dom.gameScreen); };
-            
-            // ... Diğer tüm yardımcı fonksiyonlar (aynı)
-            const renderWordDisplay = () => { dom.wordDisplay.innerHTML = state.secretWord.split('').map(char => char === ' ' ? `<div class="space-placeholder"></div>` : `<div class="letter-placeholder">${state.guessedLetters.includes(char) ? char : ''}</div>`).join(''); };
+            const startGame = (word, category) => {
+                state.secretWord = word.toLocaleUpperCase(state.currentLanguage);
+                state.currentCategoryText = category;
+                state.guessedLetters = [];
+                state.wrongGuesses = 0;
+                dom.gameContainer.dataset.gameMode = state.gameMode;
+                showScreen(dom.gameScreen);
+                const words = state.secretWord.split(' ');
+                if (words.length === 1 && words[0] === '') { // Boş kelime girilirse oyunu başlatma
+                    resetToMainMenu();
+                    alert('Lütfen geçerli bir kelime girin.'); // Uyar
+                    return;
+                }
+                const longestWordLength = Math.max(...words.map(w => w.length));
+                const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+                const containerPadding = 1.5 * rootFontSize * 2;
+                const availableWidth = dom.gameContainer.clientWidth - containerPadding - 1;
+                const gap = 0.6 * rootFontSize;
+                let calculatedBoxWidth = (availableWidth - (longestWordLength - 1) * gap) / longestWordLength;
+                const maxWidth = 55;
+                const minWidth = 24;
+                calculatedBoxWidth = Math.max(minWidth, Math.min(calculatedBoxWidth, maxWidth));
+                dom.wordDisplay.style.setProperty('--letter-box-size', `${calculatedBoxWidth}px`);
+                renderWordDisplay();
+                createKeyboard();
+                updateHangmanDrawing();
+                dom.gameStats.style.visibility = 'visible';
+                updateMistakeCounter();
+                if (state.gameMode === '2p') {
+                    dom.timerDisplay.style.display = 'inline-block';
+                    dom.scoreboard.style.display = 'flex';
+                    updateScoreboard();
+                    dom.playerPrompt.textContent = getTranslation('player_prompt_2p').replace('{player}', state.currentPlayerGuesser);
+                    startTimer();
+                } else {
+                    dom.timerDisplay.style.display = 'none';
+                    dom.scoreboard.style.display = 'none';
+                    dom.playerPrompt.textContent = getTranslation('player_prompt_pc');
+                }
+                dom.categoryDisplayGame.textContent = `${getTranslation('category_label')} ${state.currentCategoryText}`;
+            };
+            const renderWordDisplay = () => {
+                const words = state.secretWord.split(' ');
+                 if (words.length === 1 && words[0] === '') {
+                    dom.wordDisplay.innerHTML = '';
+                    return;
+                }
+                const html = words.map(word => {
+                    const lettersHtml = word.split('').map(char => 
+                        `<div class="letter-placeholder">${state.guessedLetters.includes(char) ? char : ''}</div>`
+                    ).join('');
+                    return `<div class="word-line">${lettersHtml}</div>`;
+                }).join('');
+                dom.wordDisplay.innerHTML = html;
+            };
             const createKeyboard = () => { dom.keyboardContainer.innerHTML = ''; const alphabet = data.alphabets[state.currentLanguage] || data.alphabets.en; alphabet.split('').forEach(letter => { const btn = document.createElement('button'); btn.innerText = letter; btn.addEventListener('click', () => handleGuess(letter, btn)); dom.keyboardContainer.appendChild(btn); }); };
             const updateHangmanDrawing = () => dom.hangmanParts.forEach((part, i) => part.style.visibility = i < state.wrongGuesses ? 'visible' : 'hidden');
             const toggleTheme = () => { state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark'; dom.body.dataset.theme = state.currentTheme; localStorage.setItem('hangman_theme', state.currentTheme); };
@@ -237,13 +411,20 @@
             const endGame = () => { state.gamePhase = 'game-over'; stopTimer(); let winnerMessage; if (state.p1Score > state.p2Score) winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p1Name} 🏆`); else if (state.p2Score > state.p1Score) winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p2Name} 🏆`); else winnerMessage = getTranslation('tie_game'); dom.resultMessage.className = 'win'; dom.resultMessage.innerHTML = `${getTranslation('game_over_title')}<br>${winnerMessage}`; dom.correctWordDisplay.innerHTML = `<strong>${getTranslation('final_scores')}</strong><br>${state.p1Name}: ${state.p1Score} | ${state.p2Name}: ${state.p2Score}`; dom.nextActionBtn.textContent = getTranslation('new_tournament_btn'); dom.resultModal.classList.add('show'); };
             const showHistoryModal = () => { dom.historyDetails.innerHTML = ''; state.roundHistory.forEach(round => { dom.historyDetails.innerHTML += `<div class="history-round"><h4>Raund ${round.round}</h4><p>Kelime: <strong>${round.word}</strong></p><p>Soruyu Soran: ${round.setter} | Tahmin Eden: ${round.guesser}</p><p>Kazanılan Puan: <span class="score">${round.score}</span></p></div>`; }); dom.historyModal.classList.add('show'); };
             const showResultModal = (isWin) => { if(state.gameMode === 'pc'){ dom.resultMessage.className = isWin ? 'win' : 'lose'; dom.resultMessage.textContent = isWin ? getTranslation('win_message') : getTranslation('lose_message'); dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; dom.nextActionBtn.textContent = getTranslation('new_game_btn'); dom.resultModal.classList.add('show'); } };
-            const resetToMainMenu = () => { stopTimer(); state.gamePhase = 'menu'; dom.gameStats.style.visibility = 'hidden'; dom.historyBtn.style.visibility = 'hidden'; dom.extraLifeBtn.style.visibility = 'hidden'; dom.restartBtn.style.visibility = 'hidden'; showScreen(dom.modeSelectionScreen); };
+            const resetToMainMenu = () => {
+                stopTimer();
+                state.gamePhase = 'menu';
+                dom.gameContainer.removeAttribute('data-game-mode');
+                dom.gameStats.style.visibility = 'hidden';
+                showScreen(dom.modeSelectionScreen);
+            };
 
             const init = () => {
                 dom.body.dataset.theme = state.currentTheme;
                 dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊';
                 updateUIForLanguage();
                 populateLanguageMenu();
+                showScreen(dom.modeSelectionScreen);
 
                 dom.vsPcBtn.addEventListener('click', setupPcGame);
                 dom.twoPlayerBtn.addEventListener('click', () => { state.gameMode = '2p'; dom.playerNamesForm.reset(); showScreen(dom.playerNamesScreen); });
