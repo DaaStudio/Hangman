@@ -315,6 +315,69 @@
             color: var(--disabled-color);
             font-style: italic;
         }
+        
+        /* Yeni Skor Geçmişi Stilleri */
+        .score-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .score-tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-small);
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .score-tab.active {
+            background-image: var(--accent-gradient);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .score-tab:hover:not(.active) {
+            background: var(--glass-border);
+        }
+        
+        .score-summary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-small);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .score-summary h3 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .score-summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .score-summary-stat {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .score-summary-label {
+            font-weight: 600;
+        }
+        
+        .score-summary-value {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -386,9 +449,23 @@
     <div id="score-history-modal" class="modal-container">
         <div class="modal-content">
             <h2 id="score-history-title" data-key="score_history_title">Skor Geçmişi</h2>
+            
+            <!-- Sekmeler -->
+            <div class="score-tabs">
+                <div class="score-tab active" data-tab="pc">PC Modu</div>
+                <div class="score-tab" data-tab="2p">2 Kişilik Mod</div>
+            </div>
+            
+            <!-- Özet Bilgiler -->
+            <div class="score-summary" id="score-summary">
+                <!-- Özet bilgiler buraya eklenecek -->
+            </div>
+            
+            <!-- Skor Listesi -->
             <div class="score-history-container" id="score-history-container">
                 <!-- Skor kayıtları buraya eklenecek -->
             </div>
+            
             <button id="clear-all-scores-btn" class="clear-all-scores-btn" data-key="clear_all_scores_btn">Tüm Kayıtları Sil</button>
             <button id="close-score-history-btn" data-key="close_btn">Kapat</button>
         </div>
@@ -436,7 +513,9 @@
                 scoreHistoryModal: document.getElementById('score-history-modal'),
                 scoreHistoryContainer: document.getElementById('score-history-container'),
                 clearAllScoresBtn: document.getElementById('clear-all-scores-btn'),
-                closeScoreHistoryBtn: document.getElementById('close-score-history-btn')
+                closeScoreHistoryBtn: document.getElementById('close-score-history-btn'),
+                scoreTabs: document.querySelectorAll('.score-tab'),
+                scoreSummary: document.getElementById('score-summary')
             };
 
             let state = {
@@ -448,7 +527,8 @@
                 timerInterval: null, seconds: 0, roundHistory: [],
                 gamePhase: 'menu',
                 pcGameStartTime: null,
-                extraLifeUsed: false
+                extraLifeUsed: false,
+                currentScoreTab: 'pc'
             };
             const correctSound = new Audio('bulundu.mp3');
             const errorSound = new Audio('hata.mp3');
@@ -484,7 +564,10 @@
                         score_record_extra_life:"Ekstra Hak", score_record_yes:"Evet", score_record_no:"Hayır",
                         score_record_word:"Kelime", score_record_category:"Kategori", score_record_score:"Puan",
                         score_record_player1:"Oyuncu 1", score_record_player2:"Oyuncu 2", score_record_final_score:"Final Skoru",
-                        no_score_records:"Henüz kayıtlı skor bulunmuyor."
+                        no_score_records:"Henüz kayıtlı skor bulunmuyor.",
+                        score_summary_pc:"PC Modu Özeti", score_summary_2p:"2 Kişilik Mod Özeti",
+                        total_games:"Toplam Oyun", total_score:"Toplam Puan", average_score:"Ortalama Puan",
+                        best_score:"En İyi Skor", wins:"Galibiyet", losses:"Mağlubiyet"
                     },
                     en: { 
                         game_title:"Hangman", vs_pc:"Versus PC", two_player:"2 Player Mode", setup_tournament_title:"Tournament Setup", 
@@ -511,7 +594,10 @@
                         score_record_extra_life:"Extra Life", score_record_yes:"Yes", score_record_no:"No",
                         score_record_word:"Word", score_record_category:"Category", score_record_score:"Score",
                         score_record_player1:"Player 1", score_record_player2:"Player 2", score_record_final_score:"Final Score",
-                        no_score_records:"No score records yet."
+                        no_score_records:"No score records yet.",
+                        score_summary_pc:"PC Mode Summary", score_summary_2p:"2 Player Mode Summary",
+                        total_games:"Total Games", total_score:"Total Score", average_score:"Average Score",
+                        best_score:"Best Score", wins:"Wins", losses:"Losses"
                     },
                     de: { 
                         game_title:"Galgenmännchen", vs_pc:"Gegen den PC", two_player:"2-Spieler-Modus", setup_tournament_title:"Turniereinstellungen", 
@@ -538,7 +624,10 @@
                         score_record_extra_life:"Extraleben", score_record_yes:"Ja", score_record_no:"Nein",
                         score_record_word:"Wort", score_record_category:"Kategorie", score_record_score:"Punkte",
                         score_record_player1:"Spieler 1", score_record_player2:"Spieler 2", score_record_final_score:"Endergebnis",
-                        no_score_records:"Noch keine Punktaufzeichnungen."
+                        no_score_records:"Noch keine Punktaufzeichnungen.",
+                        score_summary_pc:"PC-Modus-Zusammenfassung", score_summary_2p:"2-Spieler-Modus-Zusammenfassung",
+                        total_games:"Gesamtspiele", total_score:"Gesamtpunktzahl", average_score:"Durchschnittspunktzahl",
+                        best_score:"Beste Punktzahl", wins:"Siege", losses:"Niederlagen"
                     },
                     es: { 
                         game_title:"Ahorcado", vs_pc:"Contra la PC", two_player:"Modo 2 Jugadores", setup_tournament_title:"Ajustes del Torneo", 
@@ -565,7 +654,10 @@
                         score_record_extra_life:"Vida Extra", score_record_yes:"Sí", score_record_no:"No",
                         score_record_word:"Palabra", score_record_category:"Categoría", score_record_score:"Puntuación",
                         score_record_player1:"Jugador 1", score_record_player2:"Jugador 2", score_record_final_score:"Puntuación Final",
-                        no_score_records:"Aún no hay registros de puntuación."
+                        no_score_records:"Aún no hay registros de puntuación.",
+                        score_summary_pc:"Resumen del Modo PC", score_summary_2p:"Resumen del Modo 2 Jugadores",
+                        total_games:"Total de Juegos", total_score:"Puntuación Total", average_score:"Puntuación Promedio",
+                        best_score:"Mejor Puntuación", wins:"Victorias", losses:"Derrotas"
                     },
                     fr: { 
                         game_title:"Le Pendu", vs_pc:"Contre l'IA", two_player:"Mode 2 Joueurs", setup_tournament_title:"Configuration du Tournoi", 
@@ -592,7 +684,10 @@
                         score_record_extra_life:"Vie Supplémentaire", score_record_yes:"Oui", score_record_no:"Non",
                         score_record_word:"Mot", score_record_category:"Catégorie", score_record_score:"Score",
                         score_record_player1:"Joueur 1", score_record_player2:"Joueur 2", score_record_final_score:"Score Final",
-                        no_score_records:"Aucun enregistrement de score pour le moment."
+                        no_score_records:"Aucun enregistrement de score pour le moment.",
+                        score_summary_pc:"Résumé du Mode PC", score_summary_2p:"Résumé du Mode 2 Joueurs",
+                        total_games:"Total des Parties", total_score:"Score Total", average_score:"Score Moyen",
+                        best_score:"Meilleur Score", wins:"Victoires", losses:"Défaites"
                     }
                 },
                 pcWordDatabase: {
@@ -776,108 +871,223 @@
                     showScoreHistory();
                 }
             };
-			
-			
-			
+            
+            const calculateScoreSummary = (scoreRecords, mode) => {
+                const modeRecords = scoreRecords.filter(record => record.mode === mode);
+                
+                if (modeRecords.length === 0) {
+                    return null;
+                }
+                
+                if (mode === 'pc') {
+                    const totalGames = modeRecords.length;
+                    const totalScore = modeRecords.reduce((sum, record) => sum + record.details.score, 0);
+                    const averageScore = Math.round(totalScore / totalGames);
+                    const bestScore = Math.max(...modeRecords.map(record => record.details.score));
+                    const wins = modeRecords.length; // PC modunda sadece kazanılan oyunlar kaydedilir
+                    
+                    return {
+                        totalGames,
+                        totalScore,
+                        averageScore,
+                        bestScore,
+                        wins,
+                        losses: 0
+                    };
+                } else if (mode === '2p') {
+                    const totalGames = modeRecords.length;
+                    const player1Wins = modeRecords.filter(record => record.details.winner === record.details.player1).length;
+                    const player2Wins = modeRecords.filter(record => record.details.winner === record.details.player2).length;
+                    const ties = modeRecords.filter(record => record.details.winner === 'Tie').length;
+                    
+                    return {
+                        totalGames,
+                        player1Wins,
+                        player2Wins,
+                        ties
+                    };
+                }
+                
+                return null;
+            };
+            
+            const showScoreSummary = (mode) => {
+                const scoreRecords = loadScoreRecords();
+                const summary = calculateScoreSummary(scoreRecords, mode);
+                
+                if (!summary) {
+                    dom.scoreSummary.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
+                    return;
+                }
+                
+                if (mode === 'pc') {
+                    dom.scoreSummary.innerHTML = `
+                        <h3>${getTranslation('score_summary_pc')}</h3>
+                        <div class="score-summary-stats">
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('total_games')}:</span>
+                                <span class="score-summary-value">${summary.totalGames}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('total_score')}:</span>
+                                <span class="score-summary-value">${summary.totalScore}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('average_score')}:</span>
+                                <span class="score-summary-value">${summary.averageScore}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('best_score')}:</span>
+                                <span class="score-summary-value">${summary.bestScore}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('wins')}:</span>
+                                <span class="score-summary-value">${summary.wins}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('losses')}:</span>
+                                <span class="score-summary-value">${summary.losses}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (mode === '2p') {
+                    dom.scoreSummary.innerHTML = `
+                        <h3>${getTranslation('score_summary_2p')}</h3>
+                        <div class="score-summary-stats">
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('total_games')}:</span>
+                                <span class="score-summary-value">${summary.totalGames}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('score_record_player1')} ${getTranslation('wins')}:</span>
+                                <span class="score-summary-value">${summary.player1Wins}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('score_record_player2')} ${getTranslation('wins')}:</span>
+                                <span class="score-summary-value">${summary.player2Wins}</span>
+                            </div>
+                            <div class="score-summary-stat">
+                                <span class="score-summary-label">${getTranslation('tie_game')}:</span>
+                                <span class="score-summary-value">${summary.ties}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            };
+            
             const showScoreHistory = () => {
-    const scoreRecords = loadScoreRecords();
-    dom.scoreHistoryContainer.innerHTML = '';
-    
-    if (scoreRecords.length === 0) {
-        dom.scoreHistoryContainer.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
-    } else {
-        scoreRecords.forEach(record => {
-            const recordElement = document.createElement('div');
-            recordElement.className = 'score-record';
+                const scoreRecords = loadScoreRecords();
+                const filteredRecords = scoreRecords.filter(record => record.mode === state.currentScoreTab);
+                
+                dom.scoreHistoryContainer.innerHTML = '';
+                
+                if (filteredRecords.length === 0) {
+                    dom.scoreHistoryContainer.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
+                } else {
+                    filteredRecords.forEach(record => {
+                        const recordElement = document.createElement('div');
+                        recordElement.className = 'score-record';
+                        
+                        let detailsHtml = '';
+                        
+                        if (record.mode === 'pc') {
+                            detailsHtml = `
+                                <div class="score-record-details">
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_time')}:</span>
+                                        <span class="score-record-value">${record.details.time}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_mistakes')}:</span>
+                                        <span class="score-record-value">${record.details.mistakes}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_extra_life')}:</span>
+                                        <span class="score-record-value">${record.details.extraLifeUsed ? getTranslation('score_record_yes') : getTranslation('score_record_no')}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_word')}:</span>
+                                        <span class="score-record-value">${record.details.word}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_category')}:</span>
+                                        <span class="score-record-value">${record.details.category}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_score')}:</span>
+                                        <span class="score-record-value">${record.details.score}</span>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (record.mode === '2p') {
+                            detailsHtml = `
+                                <div class="score-record-details">
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_player1')}:</span>
+                                        <span class="score-record-value">${record.details.player1}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_player2')}:</span>
+                                        <span class="score-record-value">${record.details.player2}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('score_record_final_score')}:</span>
+                                        <span class="score-record-value">${record.details.finalScore}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('winner_is')}:</span>
+                                        <span class="score-record-value">${record.details.winner}</span>
+                                    </div>
+                                    <div class="score-record-detail">
+                                        <span class="score-record-label">${getTranslation('rounds_label')}:</span>
+                                        <span class="score-record-value">${record.details.rounds}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        recordElement.innerHTML = `
+                            <div class="score-record-header">
+                                <div class="score-record-mode">${record.mode === 'pc' ? getTranslation('score_record_pc') : getTranslation('score_record_2p')}</div>
+                                <div class="score-record-date">${record.date}</div>
+                            </div>
+                            ${detailsHtml}
+                            <div class="score-record-actions">
+                                <button class="delete-score-btn" data-id="${record.id}">✕</button>
+                            </div>
+                        `;
+                        
+                        dom.scoreHistoryContainer.appendChild(recordElement);
+                    });
+                    
+                    // Silme butonlarına event listener ekle
+                    dom.scoreHistoryContainer.querySelectorAll('.delete-score-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const id = parseInt(e.target.dataset.id);
+                            deleteScoreRecord(id);
+                        });
+                    });
+                }
+                
+                // Özet bilgileri göster
+                showScoreSummary(state.currentScoreTab);
+                
+                // Modal'ı her durumda göster (skor olsun veya olmasın)
+                dom.scoreHistoryModal.classList.add('show');
+            };
             
-            let detailsHtml = '';
+            const switchScoreTab = (tab) => {
+                // Tüm sekmeleri pasif yap
+                dom.scoreTabs.forEach(t => t.classList.remove('active'));
+                // Seçilen sekme aktif yap
+                const selectedTab = document.querySelector(`.score-tab[data-tab="${tab}"]`);
+                selectedTab.classList.add('active');
+                
+                // Sekme içeriğini güncelle
+                state.currentScoreTab = tab;
+                showScoreHistory();
+            };
             
-            if (record.mode === 'pc') {
-                detailsHtml = `
-                    <div class="score-record-details">
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_time')}:</span>
-                            <span class="score-record-value">${record.details.time}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_mistakes')}:</span>
-                            <span class="score-record-value">${record.details.mistakes}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_extra_life')}:</span>
-                            <span class="score-record-value">${record.details.extraLifeUsed ? getTranslation('score_record_yes') : getTranslation('score_record_no')}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_word')}:</span>
-                            <span class="score-record-value">${record.details.word}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_category')}:</span>
-                            <span class="score-record-value">${record.details.category}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_score')}:</span>
-                            <span class="score-record-value">${record.details.score}</span>
-                        </div>
-                    </div>
-                `;
-            } else if (record.mode === '2p') {
-                detailsHtml = `
-                    <div class="score-record-details">
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_player1')}:</span>
-                            <span class="score-record-value">${record.details.player1}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_player2')}:</span>
-                            <span class="score-record-value">${record.details.player2}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('score_record_final_score')}:</span>
-                            <span class="score-record-value">${record.details.finalScore}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('winner_is')}:</span>
-                            <span class="score-record-value">${record.details.winner}</span>
-                        </div>
-                        <div class="score-record-detail">
-                            <span class="score-record-label">${getTranslation('rounds_label')}:</span>
-                            <span class="score-record-value">${record.details.rounds}</span>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            recordElement.innerHTML = `
-                <div class="score-record-header">
-                    <div class="score-record-mode">${record.mode === 'pc' ? getTranslation('score_record_pc') : getTranslation('score_record_2p')}</div>
-                    <div class="score-record-date">${record.date}</div>
-                </div>
-                ${detailsHtml}
-                <div class="score-record-actions">
-                    <button class="delete-score-btn" data-id="${record.id}">✕</button>
-                </div>
-            `;
-            
-						dom.scoreHistoryContainer.appendChild(recordElement);
-					});
-					
-					// Silme butonlarına event listener ekle
-					dom.scoreHistoryContainer.querySelectorAll('.delete-score-btn').forEach(btn => {
-						btn.addEventListener('click', (e) => {
-							const id = parseInt(e.target.dataset.id);
-							deleteScoreRecord(id);
-						});
-					});
-				}
-				
-				// Modal'ı her durumda göster (skor olsun veya olmasın)
-				dom.scoreHistoryModal.classList.add('show');
-			};
-			
-			
-			
-			
             const resetToMainMenu = () => {
                 stopTimer();
                 state.gamePhase = 'menu';
@@ -941,6 +1151,14 @@
                 dom.scoreHistoryBtn.addEventListener('click', showScoreHistory);
                 dom.closeScoreHistoryBtn.addEventListener('click', () => dom.scoreHistoryModal.classList.remove('show'));
                 dom.clearAllScoresBtn.addEventListener('click', clearAllScoreRecords);
+                
+                // Sekme değiştirme event listener'ları
+                dom.scoreTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabName = tab.getAttribute('data-tab');
+                        switchScoreTab(tabName);
+                    });
+                });
             };
             init();
         })();
