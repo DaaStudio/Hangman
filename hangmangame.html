@@ -214,9 +214,10 @@
         /* Skor Geçmişi Stilleri */
         .score-history-container {
             width: 100%;
-            max-height: 400px;
+            max-height: 300px; /* Daha küçük yükseklik */
             overflow-y: auto;
             margin: 1rem 0;
+            flex-grow: 1; /* Esnek alan kaplasın */
         }
         
         .score-record {
@@ -378,6 +379,37 @@
         .score-summary-value {
             color: var(--primary-color);
         }
+
+        /* YENİ EKLENEN: Zaman ve hata sayacı yan yana */
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* PC modunda zaman sayacını göster */
+        .game-container[data-game-mode="pc"] #timer {
+            display: inline-block !important;
+        }
+        
+        /* YENİ: Skor geçmişi modalı için düzenlemeler */
+        #score-history-modal .modal-content {
+            max-height: 85vh; /* Ekran yüksekliğinin %85'i */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* İçerik taşmasını engelle */
+        }
+        
+        #score-history-modal .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: auto; /* Butonları en alta it */
+            flex-shrink: 0; /* Butonların boyutunu sabit tut */
+        }
+        
+        #score-history-modal .modal-buttons button {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -398,11 +430,12 @@
                 <button class="control-btn" id="theme-toggle-btn" aria-label="Tema Değiştir">🎨</button>
                 <button class="control-btn" id="sound-toggle-btn" aria-label="Ses Değiştir">🔊</button>
             </div>
-            <div id="game-stats" style="visibility: hidden">
-                <span id="mistake-counter" data-key="mistakes_label">Hata: 0/6</span>
-                <span id="timer" style="display: none;">00:10</span>
-            </div>
+            
         </div>
+		
+		
+		
+		
         <div class="screen-wrapper"> 
             <div id="mode-selection-screen" class="screen active">
                 <h1 data-key="game_title">Adam Asmaca</h1>
@@ -420,6 +453,13 @@
             <div id="game-screen" class="screen">
 				<div id="scoreboard"></div>
 				<div class="category-extra-container">
+					<div id="game-stats" style="visibility: hidden">
+						<span id="mistake-counter" data-key="mistakes_label">Hata: 0/6</span>
+	                <div class="stats-container">
+                     <span id="timer-label" data-key="time_label" style="display: none;"></span>
+                     <span id="timer" style="display: none;">00:00</span>
+                </div>
+            </div>
 					<div id="category-display-game"></div>
 					<button class="control-btn" id="extra-life-btn" aria-label="Ekstra Hak" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">+1 ❤️</button>
 				</div>
@@ -466,702 +506,788 @@
                 <!-- Skor kayıtları buraya eklenecek -->
             </div>
             
-            <button id="clear-all-scores-btn" class="clear-all-scores-btn" data-key="clear_all_scores_btn">Tüm Kayıtları Sil</button>
-            <button id="close-score-history-btn" data-key="close_btn">Kapat</button>
+            <div class="modal-buttons">
+                <button id="clear-all-scores-btn" class="clear-all-scores-btn" data-key="clear_all_scores_btn">Tüm Kayıtları Sil</button>
+                <button id="close-score-history-btn" data-key="close_btn">Kapat</button>
+            </div>
         </div>
     </div>
 
     <script>
-        (() => {
-            const dom = {
-                gameContainer: document.querySelector('.game-container'),
-                body: document.body, screens: document.querySelectorAll('.screen'), modeSelectionScreen: document.getElementById('mode-selection-screen'),
-                playerNamesScreen: document.getElementById('player-names-screen'), playerNamesForm: document.getElementById('player-names-form'),
-                p1NameInput: document.getElementById('player1-name-input'), p2NameInput: document.getElementById('player2-name-input'),
-                roundSelect: document.getElementById('round-select'),
-                wordSetupScreen: document.getElementById('word-setup-screen'), wordSetupTitle: document.getElementById('word-setup-title'),
-                wordSetupForm: document.getElementById('word-setup-form'), categorySelect: document.getElementById('category-select'),
-                customCategoryInput: document.getElementById('custom-category-input'), wordInput: document.getElementById('word-input'),
-                gameScreen: document.getElementById('game-screen'), scoreboard: document.getElementById('scoreboard'),
-                wordDisplay: document.getElementById('word-display'), keyboardContainer: document.getElementById('keyboard'),
-                hangmanParts: document.querySelectorAll('.hangman-part'), playerPrompt: document.getElementById('player-prompt'),
-                resultModal: document.getElementById('result-modal'), resultMessage: document.getElementById('result-message'),
-                correctWordDisplay: document.getElementById('correct-word-display'), nextActionBtn: document.getElementById('next-action-btn'),
-                mainMenuBtn: document.getElementById('main-menu-btn'), themeToggleBtn: document.getElementById('theme-toggle-btn'),
-                soundToggleBtn: document.getElementById('sound-toggle-btn'), gameStats: document.getElementById('game-stats'),
-                mistakeDisplay: document.getElementById('mistake-counter'), vsPcBtn: document.getElementById('vs-pc-btn'),
-                twoPlayerBtn: document.getElementById('two-player-btn'), historyBtn: document.getElementById('history-btn'),
-                historyModal: document.getElementById('history-modal'), historyDetails: document.getElementById('history-details'),
-                closeHistoryBtn: document.getElementById('close-history-btn'), backToMenuBtn: document.getElementById('back-to-menu-btn'),
-                extraLifeBtn: document.getElementById('extra-life-btn'), extraLifeModal: document.getElementById('extra-life-modal'),
-                watchAdBtn: document.getElementById('watch-ad-btn'), continueGameBtn: document.getElementById('continue-game-btn'),
-                categoryDisplayGame: document.getElementById('category-display-game'),
-                timerDisplay: document.getElementById('timer'),
-                homeBtn: document.getElementById('home-btn'),
-                confirmHomeModal: document.getElementById('confirm-home-modal'),
-                confirmHomeYesBtn: document.getElementById('confirm-home-yes-btn'),
-                confirmHomeNoBtn: document.getElementById('confirm-home-no-btn'),
-                restartBtn: document.getElementById('restart-btn'),
-                confirmRestartModal: document.getElementById('confirm-restart-modal'),
-                confirmRestartYesBtn: document.getElementById('confirm-restart-yes-btn'),
-                confirmRestartNoBtn: document.getElementById('confirm-restart-no-btn'),
-                backToNamesBtn: document.getElementById('back-to-names-btn'),
-                langSelectBtn: document.getElementById('lang-select-btn'),
-                languageMenu: document.getElementById('language-menu'),
-                langBtnWrapper: document.getElementById('lang-btn-wrapper'),
-                scoreHistoryBtn: document.getElementById('score-history-btn'),
-                scoreHistoryModal: document.getElementById('score-history-modal'),
-                scoreHistoryContainer: document.getElementById('score-history-container'),
-                clearAllScoresBtn: document.getElementById('clear-all-scores-btn'),
-                closeScoreHistoryBtn: document.getElementById('close-score-history-btn'),
-                scoreTabs: document.querySelectorAll('.score-tab'),
-                scoreSummary: document.getElementById('score-summary')
-            };
+    (() => {
+        const dom = {
+            gameContainer: document.querySelector('.game-container'),
+            body: document.body, screens: document.querySelectorAll('.screen'), modeSelectionScreen: document.getElementById('mode-selection-screen'),
+            playerNamesScreen: document.getElementById('player-names-screen'), playerNamesForm: document.getElementById('player-names-form'),
+            p1NameInput: document.getElementById('player1-name-input'), p2NameInput: document.getElementById('player2-name-input'),
+            roundSelect: document.getElementById('round-select'),
+            wordSetupScreen: document.getElementById('word-setup-screen'), wordSetupTitle: document.getElementById('word-setup-title'),
+            wordSetupForm: document.getElementById('word-setup-form'), categorySelect: document.getElementById('category-select'),
+            customCategoryInput: document.getElementById('custom-category-input'), wordInput: document.getElementById('word-input'),
+            gameScreen: document.getElementById('game-screen'), scoreboard: document.getElementById('scoreboard'),
+            wordDisplay: document.getElementById('word-display'), keyboardContainer: document.getElementById('keyboard'),
+            hangmanParts: document.querySelectorAll('.hangman-part'), playerPrompt: document.getElementById('player-prompt'),
+            resultModal: document.getElementById('result-modal'), resultMessage: document.getElementById('result-message'),
+            correctWordDisplay: document.getElementById('correct-word-display'), nextActionBtn: document.getElementById('next-action-btn'),
+            mainMenuBtn: document.getElementById('main-menu-btn'), themeToggleBtn: document.getElementById('theme-toggle-btn'),
+            soundToggleBtn: document.getElementById('sound-toggle-btn'), gameStats: document.getElementById('game-stats'),
+            mistakeDisplay: document.getElementById('mistake-counter'), vsPcBtn: document.getElementById('vs-pc-btn'),
+            twoPlayerBtn: document.getElementById('two-player-btn'), historyBtn: document.getElementById('history-btn'),
+            historyModal: document.getElementById('history-modal'), historyDetails: document.getElementById('history-details'),
+            closeHistoryBtn: document.getElementById('close-history-btn'), backToMenuBtn: document.getElementById('back-to-menu-btn'),
+            extraLifeBtn: document.getElementById('extra-life-btn'), extraLifeModal: document.getElementById('extra-life-modal'),
+            watchAdBtn: document.getElementById('watch-ad-btn'), continueGameBtn: document.getElementById('continue-game-btn'),
+            categoryDisplayGame: document.getElementById('category-display-game'),
+            timerDisplay: document.getElementById('timer'),
+            timerLabel: document.getElementById('timer-label'),
+            homeBtn: document.getElementById('home-btn'),
+            confirmHomeModal: document.getElementById('confirm-home-modal'),
+            confirmHomeYesBtn: document.getElementById('confirm-home-yes-btn'),
+            confirmHomeNoBtn: document.getElementById('confirm-home-no-btn'),
+            restartBtn: document.getElementById('restart-btn'),
+            confirmRestartModal: document.getElementById('confirm-restart-modal'),
+            confirmRestartYesBtn: document.getElementById('confirm-restart-yes-btn'),
+            confirmRestartNoBtn: document.getElementById('confirm-restart-no-btn'),
+            backToNamesBtn: document.getElementById('back-to-names-btn'),
+            langSelectBtn: document.getElementById('lang-select-btn'),
+            languageMenu: document.getElementById('language-menu'),
+            langBtnWrapper: document.getElementById('lang-btn-wrapper'),
+            scoreHistoryBtn: document.getElementById('score-history-btn'),
+            scoreHistoryModal: document.getElementById('score-history-modal'),
+            scoreHistoryContainer: document.getElementById('score-history-container'),
+            clearAllScoresBtn: document.getElementById('clear-all-scores-btn'),
+            closeScoreHistoryBtn: document.getElementById('close-score-history-btn'),
+            scoreTabs: document.querySelectorAll('.score-tab'),
+            scoreSummary: document.getElementById('score-summary')
+        };
 
-            let state = {
-                gameMode: '', secretWord: '', currentCategoryText: '', guessedLetters: [], wrongGuesses: 0, maxWrongGuesses: 6,
-                isMuted: localStorage.getItem('hangman_isMuted') === 'true', currentTheme: localStorage.getItem('hangman_theme') || 'dark',
-                currentLanguage: localStorage.getItem('hangman_lang') || 'en',
-                p1Name: '', p2Name: '', p1Score: 0, p2Score: 0, currentRound: 0, maxRounds: 6, 
-                currentPlayerSetter: null, currentPlayerGuesser: null,
-                timerInterval: null, seconds: 0, roundHistory: [],
-                gamePhase: 'menu',
-                pcGameStartTime: null,
-                extraLifeUsed: false,
-                currentScoreTab: 'pc'
-            };
-            const correctSound = new Audio('bulundu.mp3');
-            const errorSound = new Audio('hata.mp3');
-            const winSound = new Audio('bitti.mp3');
-            const loseSound = new Audio('kayip.mp3');
+        let state = {
+            gameMode: '', secretWord: '', currentCategoryText: '', guessedLetters: [], wrongGuesses: 0, maxWrongGuesses: 6,
+            isMuted: localStorage.getItem('hangman_isMuted') === 'true', currentTheme: localStorage.getItem('hangman_theme') || 'dark',
+            currentLanguage: localStorage.getItem('hangman_lang') || 'en',
+            p1Name: '', p2Name: '', p1Score: 0, p2Score: 0, currentRound: 0, maxRounds: 6, 
+            currentPlayerSetter: null, currentPlayerGuesser: null,
+            timerInterval: null, seconds: 0, roundHistory: [],
+            gamePhase: 'menu',
+            pcGameStartTime: null,
+            extraLifeUsed: false,
+            currentScoreTab: 'pc'
+        };
+        const correctSound = new Audio('bulundu.mp3');
+        const errorSound = new Audio('hata.mp3');
+        const winSound = new Audio('bitti.mp3');
+        const loseSound = new Audio('kayip.mp3');
 
-            const data = {
-                languages: { 'tr': 'Türkçe 🇹🇷', 'en': 'English 🇬🇧/🇺🇸', 'es': 'Español 🇪🇸', 'de': 'Deutsch 🇩🇪', 'fr': 'Français 🇫🇷' },
-                alphabets: { tr: 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ', en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', es: 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', de: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ', fr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' },
-                languageStrings: {
-                    tr: { 
-                        game_title:"Adam Asmaca", vs_pc:"PC'ye Karşı", two_player:"2 Kişilik Mod", setup_tournament_title:"Turnuva Ayarları", 
-                        player1_name_placeholder:"1. Oyuncu Adı", player2_name_placeholder:"2. Oyuncu Adı", rounds_label:"Raund Sayısı:", 
-                        rounds_2:"2 Raund", rounds_4:"4 Raund", rounds_6:"6 Raund", rounds_8:"8 Raund", rounds_10:"10 Raund", 
-                        start_tournament_btn:"Turnuvayı Başlat", back_btn:"Geri Dön", 
-                        word_setup_title:"{player}, kelimeyi belirle... (Raund {round}/{max})", select_category:"Kategori Seçin", 
-                        cat_celebrity:"Ünlü İsmi", cat_city:"Şehir", cat_country:"Ülke", cat_animal:"Hayvan", cat_movie:"Film Adı", 
-                        cat_custom:"Diğer...", custom_category_placeholder:"Kategori adını yazın...", word_input_placeholder:"Kelimeyi girin...", 
-                        start_round_btn:"Raundu Başlat", back_to_settings_btn:"Ayarlara Geri Dön", mistakes_label:"Hata:", category_label:"Kategori:", 
-                        player_prompt_pc:"Kelimeyi bulmaya çalış!", player_prompt_2p:"{player}, puan için hızlı ve dikkatli ol!", 
-                        main_menu_btn:"Ana Menü", new_game_btn:"Yeni Oyun", next_round_btn:"Sıradaki Raund", game_over_btn:"Oyun Bitti! Sonuçları Gör", 
-                        new_tournament_btn:"Yeni Turnuva", score_history_title:"Skor Geçmişi", close_btn:"Kapat", 
-                        extra_life_title:"+1 Ekstra Hak Kazan", extra_life_desc:"Kısa bir reklam izleyerek bir şans daha elde edebilirsin.", 
-                        watch_ad_btn:"Reklam İzle", no_thanks_btn:"İstemiyorum", confirm_home_title:"Ana Menüye Dön?", 
-                        confirm_home_desc:"Mevcut oyun ilerlemeniz kaybolacak. Emin misiniz?", yes_btn:"Evet, Dön", no_btn:"Hayır, Kal", 
-                        confirm_restart_title:"Oyunu Yeniden Başlat?", confirm_restart_desc:"Mevcut kelime iptal edilecek ve yeni bir kelime sorulacak.", 
-                        yes_restart_btn:"Evet, Yeniden Başlat", no_cancel_btn:"Hayır, Vazgeç", alert_no_word_cat:"Lütfen bir kelime girin ve kategori seçin!", 
-                        win_message:"Tebrikler, Kazandın!", lose_message:"Kaybettin!", correct_word_was:"Doğru kelime:", 
-                        round_end_win:"Harika! {score} puan kazandın!", round_end_lose:"Bilemedin! 0 Puan.", game_over_title:"Oyun Bitti!", 
-                        winner_is:"{player} Kazandı!", tie_game:"Oyun Berabere Bitti!", final_scores:"Final Skorları:",
-                        clear_all_scores_btn:"Tüm Kayıtları Sil", score_record_pc:"PC Modu", score_record_2p:"2 Kişilik Modu",
-                        score_record_date:"Tarih", score_record_time:"Süre", score_record_mistakes:"Hata Sayısı", 
-                        score_record_extra_life:"Ekstra Hak", score_record_yes:"Evet", score_record_no:"Hayır",
-                        score_record_word:"Kelime", score_record_category:"Kategori", score_record_score:"Puan",
-                        score_record_player1:"Oyuncu 1", score_record_player2:"Oyuncu 2", score_record_final_score:"Final Skoru",
-                        no_score_records:"Henüz kayıtlı skor bulunmuyor.",
-                        score_summary_pc:"PC Modu Özeti", score_summary_2p:"2 Kişilik Mod Özeti",
-                        total_games:"Toplam Oyun", total_score:"Toplam Puan", average_score:"Ortalama Puan",
-                        best_score:"En İyi Skor", wins:"Galibiyet", losses:"Mağlubiyet"
-                    },
-                    en: { 
-                        game_title:"Hangman", vs_pc:"Versus PC", two_player:"2 Player Mode", setup_tournament_title:"Tournament Setup", 
-                        player1_name_placeholder:"Player 1 Name", player2_name_placeholder:"Player 2 Name", rounds_label:"Number of Rounds:", 
-                        rounds_2:"2 Rounds", rounds_4:"4 Rounds", rounds_6:"6 Rounds", rounds_8:"8 Rounds", rounds_10:"10 Rounds", 
-                        start_tournament_btn:"Start Tournament", back_btn:"Back", 
-                        word_setup_title:"{player}, set the word... (Round {round}/{max})", select_category:"Select Category", 
-                        cat_celebrity:"Celebrity", cat_city:"City", cat_country:"Country", cat_animal:"Animal", cat_movie:"Movie Title", 
-                        cat_custom:"Other...", custom_category_placeholder:"Enter category name...", word_input_placeholder:"Enter the word...", 
-                        start_round_btn:"Start Round", back_to_settings_btn:"Back to Settings", mistakes_label:"Mistakes:", category_label:"Category:", 
-                        player_prompt_pc:"Try to find the word!", player_prompt_2p:"{player}, be quick and careful for the points!", 
-                        main_menu_btn:"Main Menu", new_game_btn:"New Game", next_round_btn:"Next Round", game_over_btn:"Game Over! See Results", 
-                        new_tournament_btn:"New Tournament", score_history_title:"Score History", close_btn:"Close", 
-                        extra_life_title:"+1 Extra Life", extra_life_desc:"Watch a short ad to get another chance.", 
-                        watch_ad_btn:"Watch Ad", no_thanks_btn:"No, thanks", confirm_home_title:"Return to Main Menu?", 
-                        confirm_home_desc:"Your current game progress will be lost. Are you sure?", yes_btn:"Yes, Return", no_btn:"No, Stay", 
-                        confirm_restart_title:"Restart Game?", confirm_restart_desc:"The current word will be cancelled and a new one will be chosen.", 
-                        yes_restart_btn:"Yes, Restart", no_cancel_btn:"No, Cancel", alert_no_word_cat:"Please enter a word and select a category!", 
-                        win_message:"Congratulations, You Won!", lose_message:"You Lost!", correct_word_was:"The correct word was:", 
-                        round_end_win:"Great! You earned {score} points!", round_end_lose:"You missed! 0 Points.", game_over_title:"Game Over!", 
-                        winner_is:"{player} Wins!", tie_game:"It's a Tie!", final_scores:"Final Scores:",
-                        clear_all_scores_btn:"Clear All Records", score_record_pc:"PC Mode", score_record_2p:"2 Player Mode",
-                        score_record_date:"Date", score_record_time:"Time", score_record_mistakes:"Mistakes", 
-                        score_record_extra_life:"Extra Life", score_record_yes:"Yes", score_record_no:"No",
-                        score_record_word:"Word", score_record_category:"Category", score_record_score:"Score",
-                        score_record_player1:"Player 1", score_record_player2:"Player 2", score_record_final_score:"Final Score",
-                        no_score_records:"No score records yet.",
-                        score_summary_pc:"PC Mode Summary", score_summary_2p:"2 Player Mode Summary",
-                        total_games:"Total Games", total_score:"Total Score", average_score:"Average Score",
-                        best_score:"Best Score", wins:"Wins", losses:"Losses"
-                    },
-                    de: { 
-                        game_title:"Galgenmännchen", vs_pc:"Gegen den PC", two_player:"2-Spieler-Modus", setup_tournament_title:"Turniereinstellungen", 
-                        player1_name_placeholder:"Spieler 1 Name", player2_name_placeholder:"Spieler 2 Name", rounds_label:"Rundenzahl:", 
-                        rounds_2:"2 Runden", rounds_4:"4 Runden", rounds_6:"6 Runden", rounds_8:"8 Runden", rounds_10:"10 Runden", 
-                        start_tournament_btn:"Turnier starten", back_btn:"Zurück", 
-                        word_setup_title:"{player}, wähle das Wort... (Runde {round}/{max})", select_category:"Kategorie wählen", 
-                        cat_celebrity:"Berühmtheit", cat_city:"Stadt", cat_country:"Land", cat_animal:"Tier", cat_movie:"Filmtitel", 
-                        cat_custom:"Andere...", custom_category_placeholder:"Kategorienamen eingeben...", word_input_placeholder:"Wort eingeben...", 
-                        start_round_btn:"Runde starten", back_to_settings_btn:"Zurück zu den Einstellungen", mistakes_label:"Fehler:", category_label:"Kategorie:", 
-                        player_prompt_pc:"Versuche, das Wort zu finden!", player_prompt_2p:"{player}, sei schnell und vorsichtig für die Punkte!", 
-                        main_menu_btn:"Hauptmenü", new_game_btn:"Neues Spiel", next_round_btn:"Nächste Runde", game_over_btn:"Spiel vorbei! Ergebnisse", 
-                        new_tournament_btn:"Neues Turnier", score_history_title:"Punktverlauf", close_btn:"Schließen", 
-                        extra_life_title:"+1 Extraleben", extra_life_desc:"Sieh dir eine kurze Werbung an, um eine weitere Chance zu erhalten.", 
-                        watch_ad_btn:"Werbung ansehen", no_thanks_btn:"Nein, danke", confirm_home_title:"Zum Hauptmenü zurückkehren?", 
-                        confirm_home_desc:"Dein aktueller Spielfortschritt geht verloren. Sicher?", yes_btn:"Ja, zurück", no_btn:"Nein, bleiben", 
-                        confirm_restart_title:"Spiel neu starten?", confirm_restart_desc:"Das aktuelle Wort wird verworfen und ein neues gewählt.", 
-                        yes_restart_btn:"Ja, Neustart", no_cancel_btn:"Nein, abbrechen", alert_no_word_cat:"Bitte gib ein Wort ein und wähle eine Kategorie!", 
-                        win_message:"Glückwunsch, du hast gewonnen!", lose_message:"Du hast verloren!", correct_word_was:"Das richtige Wort war:", 
-                        round_end_win:"Super! {score} Punkte erhalten!", round_end_lose:"Nicht geschafft! 0 Punkte.", game_over_title:"Spiel vorbei!", 
-                        winner_is:"{player} gewinnt!", tie_game:"Unentschieden!", final_scores:"Endergebnis:",
-                        clear_all_scores_btn:"Alle Aufzeichnungen löschen", score_record_pc:"PC-Modus", score_record_2p:"2-Spieler-Modus",
-                        score_record_date:"Datum", score_record_time:"Zeit", score_record_mistakes:"Fehler", 
-                        score_record_extra_life:"Extraleben", score_record_yes:"Ja", score_record_no:"Nein",
-                        score_record_word:"Wort", score_record_category:"Kategorie", score_record_score:"Punkte",
-                        score_record_player1:"Spieler 1", score_record_player2:"Spieler 2", score_record_final_score:"Endergebnis",
-                        no_score_records:"Noch keine Punktaufzeichnungen.",
-                        score_summary_pc:"PC-Modus-Zusammenfassung", score_summary_2p:"2-Spieler-Modus-Zusammenfassung",
-                        total_games:"Gesamtspiele", total_score:"Gesamtpunktzahl", average_score:"Durchschnittspunktzahl",
-                        best_score:"Beste Punktzahl", wins:"Siege", losses:"Niederlagen"
-                    },
-                    es: { 
-                        game_title:"Ahorcado", vs_pc:"Contra la PC", two_player:"Modo 2 Jugadores", setup_tournament_title:"Ajustes del Torneo", 
-                        player1_name_placeholder:"Nombre Jugador 1", player2_name_placeholder:"Nombre Jugador 2", rounds_label:"Número de Rondas:", 
-                        rounds_2:"2 Rondas", rounds_4:"4 Rondas", rounds_6:"6 Rondas", rounds_8:"8 Rondas", rounds_10:"10 Rondas", 
-                        start_tournament_btn:"Iniciar Torneo", back_btn:"Volver", 
-                        word_setup_title:"{player}, elige la palabra... (Ronda {round}/{max})", select_category:"Seleccionar Categoría", 
-                        cat_celebrity:"Famoso", cat_city:"Ciudad", cat_country:"País", cat_animal:"Animal", cat_movie:"Película", 
-                        cat_custom:"Otro...", custom_category_placeholder:"Introduce categoría...", word_input_placeholder:"Introduce la palabra...", 
-                        start_round_btn:"Iniciar Ronda", back_to_settings_btn:"Volver a Ajustes", mistakes_label:"Errores:", category_label:"Categoría:", 
-                        player_prompt_pc:"¡Intenta encontrar la palabra!", player_prompt_2p:"¡{player}, sé rápido y cuidadoso por los puntos!", 
-                        main_menu_btn:"Menú Principal", new_game_btn:"Nuevo Juego", next_round_btn:"Siguiente Ronda", game_over_btn:"¡Fin del juego! Ver Resultados", 
-                        new_tournament_btn:"Nuevo Torneo", score_history_title:"Historial de Puntuación", close_btn:"Cerrar", 
-                        extra_life_title:"+1 Vida Extra", extra_life_desc:"Mira un breve anuncio para tener otra oportunidad.", 
-                        watch_ad_btn:"Ver Anuncio", no_thanks_btn:"No, gracias", confirm_home_title:"¿Volver al Menú Principal?", 
-                        confirm_home_desc:"Tu progreso actual se perderá. ¿Estás seguro?", yes_btn:"Sí, volver", no_btn:"No, quedarse", 
-                        confirm_restart_title:"¿Reiniciar Juego?", confirm_restart_desc:"La palabra actual será cancelada y se elegirá una nueva.", 
-                        yes_restart_btn:"Sí, reiniciar", no_cancel_btn:"No, cancelar", alert_no_word_cat:"¡Por favor, introduce una palabra y selecciona una categoría!", 
-                        win_message:"¡Felicidades, has ganado!", lose_message:"¡Has perdido!", correct_word_was:"La palabra correcta era:", 
-                        round_end_win:"¡Genial! ¡Has ganado {score} puntos!", round_end_lose:"¡Fallaste! 0 Puntos.", game_over_title:"¡Fin del Juego!", 
-                        winner_is:"¡{player} Gana!", tie_game:"¡Es un Empate!", final_scores:"Puntuaciones Finales:",
-                        clear_all_scores_btn:"Borrar Todos los Registros", score_record_pc:"Modo PC", score_record_2p:"Modo 2 Jugadores",
-                        score_record_date:"Fecha", score_record_time:"Tiempo", score_record_mistakes:"Errores", 
-                        score_record_extra_life:"Vida Extra", score_record_yes:"Sí", score_record_no:"No",
-                        score_record_word:"Palabra", score_record_category:"Categoría", score_record_score:"Puntuación",
-                        score_record_player1:"Jugador 1", score_record_player2:"Jugador 2", score_record_final_score:"Puntuación Final",
-                        no_score_records:"Aún no hay registros de puntuación.",
-                        score_summary_pc:"Resumen del Modo PC", score_summary_2p:"Resumen del Modo 2 Jugadores",
-                        total_games:"Total de Juegos", total_score:"Puntuación Total", average_score:"Puntuación Promedio",
-                        best_score:"Mejor Puntuación", wins:"Victorias", losses:"Derrotas"
-                    },
-                    fr: { 
-                        game_title:"Le Pendu", vs_pc:"Contre l'IA", two_player:"Mode 2 Joueurs", setup_tournament_title:"Configuration du Tournoi", 
-                        player1_name_placeholder:"Nom Joueur 1", player2_name_placeholder:"Nom Joueur 2", rounds_label:"Nombre de Manches :", 
-                        rounds_2:"2 Manches", rounds_4:"4 Manches", rounds_6:"6 Manches", rounds_8:"8 Manches", rounds_10:"10 Manches", 
-                        start_tournament_btn:"Démarrer le Tournoi", back_btn:"Retour", 
-                        word_setup_title:"{player}, définis le mot... (Manche {round}/{max})", select_category:"Choisir une catégorie", 
-                        cat_celebrity:"Célébrité", cat_city:"Ville", cat_country:"Pays", cat_animal:"Animal", cat_movie:"Film", 
-                        cat_custom:"Autre...", custom_category_placeholder:"Entrez la catégorie...", word_input_placeholder:"Entrez le mot...", 
-                        start_round_btn:"Démarrer la Manche", back_to_settings_btn:"Retour aux réglages", mistakes_label:"Erreurs :", category_label:"Catégorie :", 
-                        player_prompt_pc:"Essayez de trouver le mot !", player_prompt_2p:"{player}, sois rapide et prudent pour les points !", 
-                        main_menu_btn:"Menu Principal", new_game_btn:"Nouveau Jeu", next_round_btn:"Manche Suivante", game_over_btn:"Fin de partie ! Voir les résultats", 
-                        new_tournament_btn:"Nouveau Tournoi", score_history_title:"Historique des scores", close_btn:"Fermer", 
-                        extra_life_title:"+1 Vie Supplémentaire", extra_life_desc:"Regardez une courte publicité pour obtenir une autre chance.", 
-                        watch_ad_btn:"Regarder la pub", no_thanks_btn:"Non, merci", confirm_home_title:"Retourner au menu principal ?", 
-                        confirm_home_desc:"Votre progression actuelle sera perdue. Êtes-vous sûr ?", yes_btn:"Oui, retourner", no_btn:"Non, rester", 
-                        confirm_restart_title:"Recommencer la partie ?", confirm_restart_desc:"Le mot actuel sera annulé et un nouveau sera choisi.", 
-                        yes_restart_btn:"Oui, recommencer", no_cancel_btn:"Non, annuler", alert_no_word_cat:"Veuillez entrer un mot et sélectionner une catégorie !", 
-                        win_message:"Félicitations, vous avez gagné !", lose_message:"Vous avez perdu !", correct_word_was:"Le mot correct était :", 
-                        round_end_win:"Génial ! Vous avez gagné {score} points !", round_end_lose:"Vous avez raté ! 0 Points.", game_over_title:"Fin de la partie !", 
-                        winner_is:"{player} gagne !", tie_game:"Égalité !", final_scores:"Scores finaux :",
-                        clear_all_scores_btn:"Effacer Tous les Enregistrements", score_record_pc:"Mode PC", score_record_2p:"Mode 2 Joueurs",
-                        score_record_date:"Date", score_record_time:"Temps", score_record_mistakes:"Erreurs", 
-                        score_record_extra_life:"Vie Supplémentaire", score_record_yes:"Oui", score_record_no:"Non",
-                        score_record_word:"Mot", score_record_category:"Catégorie", score_record_score:"Score",
-                        score_record_player1:"Joueur 1", score_record_player2:"Joueur 2", score_record_final_score:"Score Final",
-                        no_score_records:"Aucun enregistrement de score pour le moment.",
-                        score_summary_pc:"Résumé du Mode PC", score_summary_2p:"Résumé du Mode 2 Joueurs",
-                        total_games:"Total des Parties", total_score:"Score Total", average_score:"Score Moyen",
-                        best_score:"Meilleur Score", wins:"Victoires", losses:"Défaites"
-                    }
+        const data = {
+            languages: { 'tr': 'Türkçe 🇹🇷', 'en': 'English 🇬🇧/🇺🇸', 'es': 'Español 🇪🇸', 'de': 'Deutsch 🇩🇪', 'fr': 'Français 🇫🇷' },
+            alphabets: { tr: 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ', en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', es: 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', de: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ', fr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' },
+            languageStrings: {
+                tr: { 
+                    game_title:"Adam Asmaca", vs_pc:"PC'ye Karşı", two_player:"2 Kişilik Mod", setup_tournament_title:"Turnuva Ayarları", 
+                    player1_name_placeholder:"1. Oyuncu Adı", player2_name_placeholder:"2. Oyuncu Adı", rounds_label:"Raund Sayısı:", 
+                    rounds_2:"2 Raund", rounds_4:"4 Raund", rounds_6:"6 Raund", rounds_8:"8 Raund", rounds_10:"10 Raund", 
+                    start_tournament_btn:"Turnuvayı Başlat", back_btn:"Geri Dön", 
+                    word_setup_title:"{player}, kelimeyi belirle... (Raund {round}/{max})", select_category:"Kategori Seçin", 
+                    cat_celebrity:"Ünlü İsmi", cat_city:"Şehir", cat_country:"Ülke", cat_animal:"Hayvan", cat_movie:"Film Adı", 
+                    cat_custom:"Diğer...", custom_category_placeholder:"Kategori adını yazın...", word_input_placeholder:"Kelimeyi girin...", 
+                    start_round_btn:"Raundu Başlat", back_to_settings_btn:"Ayarlara Geri Dön", mistakes_label:"Hata:", category_label:"Kategori:", 
+                    player_prompt_pc:"Kelimeyi bulmaya çalış!", player_prompt_2p:"{player}, puan için hızlı ve dikkatli ol!", 
+                    main_menu_btn:"Ana Menü", new_game_btn:"Yeni Oyun", next_round_btn:"Sıradaki Raund", game_over_btn:"Oyun Bitti! Sonuçları Gör", 
+                    new_tournament_btn:"Yeni Turnuva", score_history_title:"Skor Geçmişi", close_btn:"Kapat", 
+                    extra_life_title:"+1 Ekstra Hak Kazan", extra_life_desc:"Kısa bir reklam izleyerek bir şans daha elde edebilirsin.", 
+                    watch_ad_btn:"Reklam İzle", no_thanks_btn:"İstemiyorum", confirm_home_title:"Ana Menüye Dön?", 
+                    confirm_home_desc:"Mevcut oyun ilerlemeniz kaybolacak. Emin misiniz?", yes_btn:"Evet, Dön", no_btn:"Hayır, Kal", 
+                    confirm_restart_title:"Oyunu Yeniden Başlat?", confirm_restart_desc:"Mevcut kelime iptal edilecek ve yeni bir kelime sorulacak.", 
+                    yes_restart_btn:"Evet, Yeniden Başlat", no_cancel_btn:"Hayır, Vazgeç", alert_no_word_cat:"Lütfen bir kelime girin ve kategori seçin!", 
+                    win_message:"Tebrikler, Kazandın!", lose_message:"Kaybettin!", correct_word_was:"Doğru kelime:", 
+                    round_end_win:"Harika! {score} puan kazandın!", round_end_lose:"Bilemedin! 0 Puan.", game_over_title:"Oyun Bitti!", 
+                    winner_is:"{player} Kazandı!", tie_game:"Oyun Berabere Bitti!", final_scores:"Final Skorları:",
+                    clear_all_scores_btn:"Tüm Kayıtları Sil", score_record_pc:"PC Modu", score_record_2p:"2 Kişilik Modu",
+                    score_record_date:"Tarih", score_record_time:"Süre", score_record_mistakes:"Hata Sayısı", 
+                    score_record_extra_life:"Ekstra Hak", score_record_yes:"Evet", score_record_no:"Hayır",
+                    score_record_word:"Kelime", score_record_category:"Kategori", score_record_score:"Puan",
+                    score_record_player1:"Oyuncu 1", score_record_player2:"Oyuncu 2", score_record_final_score:"Final Skoru",
+                    no_score_records:"Henüz kayıtlı skor bulunmuyor.",
+                    score_summary_pc:"PC Modu Özeti", score_summary_2p:"2 Kişilik Mod Özeti",
+                    total_games:"Toplam Oyun", total_score:"Toplam Puan", average_score:"Ortalama Puan",
+                    best_score:"En İyi Skor", wins:"Galibiyet", losses:"Mağlubiyet",
+                    time_label:"Süre:"
                 },
-                pcWordDatabase: {
-                    tr: { cat_country: ["TÜRKİYE", "ALMANYA", "JAPONYA", "BREZİLYA", "KANADA", "AVUSTRALYA", "YUNANİSTAN", "İSPANYA", "İTALYA", "FRANSA", "İNGİLTERE", "RUSYA", "ÇİN", "HİNDİSTAN", "MEKSİKA", "ARJANTİN", "MISIR", "NORVEÇ", "İSVEÇ", "FİNLANDİYA", "PORTEKİZ", "HOLLANDA", "BELÇİKA", "AVUSTURYA", "İSVİÇRE", "POLONYA", "MACARİSTAN", "ROMANYA", "UKRAYNA", "İRAN", "IRAK", "SURİYE", "LÜBNAN", "ÜRDÜN", "İSRAİL", "FİLİSTİN", "SUUDİ ARABİSTAN", "KATAR", "KUVEYT", "ENDONEZYA", "MALEZYA", "TAYLAND", "VİETNAM", "GÜNEY KORE", "ŞİLİ", "PERU", "KOLOMBİYA", "VENEZUELA", "NİJERYA", "GÜNEY AFRİKA"], cat_city: ["İSTANBUL", "ANKARA", "İZMİR", "BURSA", "ADANA", "GAZİANTEP", "KONYA", "ANTALYA", "DİYARBAKIR", "KAYSERİ", "MERSİN", "ESKİŞEHİR", "DENİZLİ", "SAMSUN", "ŞANLIURFA", "MALATYA", "ERZURUM", "VAN", "TRABZON", "SİVAS", "EDİRNE", "MUĞLA", "AYDIN", "BALIKESİR", "MANİSA", "KOCAELİ", "SAKARYA", "PARİS", "LONDRA", "ROMA", "BERLİN", "MOSKOVA", "TOKYO", "PEKİN", "KAHİRE", "NEW YORK", "LOS ANGELES", "SYDNEY", "MADRİD", "ATİNA", "AMSTERDAM", "VİYANA", "PRAG", "BUDAPEŞTE", "VARŞOVA", "STOKHOLM", "OSLO", "HELSİNKİ", "KOPENHAG", "LİZBON"], cat_animal: ["ASLAN", "KAPLUMBAĞA", "PENGUEN", "ZÜRAFA", "KANGURU", "YUNUS", "FİL", "MAYMUN", "KELEBEK", "KÖPEK", "KEDİ", "AT", "EŞEK", "İNEK", "KOYUN", "KEÇİ", "TAVUK", "HOROZ", "ÖRDEK", "BALIK", "YILAN", "TİMSAH", "KERTENKELE", "FARE", "SİNCAP", "TAVŞAN", "AYI", "KURT", "TİLKİ", "GEYİK", "ZEBRA", "PANDA", "KOALA", "DEVE", "BALİNA", "FOK", "KARTAL", "ŞAHİN", "BAYKUŞ", "PAPAĞAN", "GÜVERCİN", "KARINCA", "ARI", "SİVRİSİNEK", "ÇEKİRGE", "ÖRÜMCEK", "AKREP", "YENGEÇ", "İSTAKOZ", "AHTAPOT"], cat_movie: ["BABA", "ESARETİN BEDELİ", "YÜZÜKLERİN EFENDİSİ", "KARANLIK ŞÖVALYE", "HABABAM SINIFI", "EŞKIYA", "GORA", "VİZONTELE", "BABAM VE OĞLUM", "KIŞ UYKUSU", "MATRIX", "FORREST GUMP", "TİTANİK", "GLADYATÖR", "YEŞİL YOL", "UCUZ ROMAN", "DÖVÜŞ KULÜBÜ", "BAŞLANGİÇ", "YILDIZLARARASI", "PARAZİT", "JOKER", "AVATAR", "YENİLMEZLER", "ASLAN KRAL", "GELECEĞE DÖNÜŞ", "PİYANİST", "HIZLI VE ÖFKELİ", "KARAYİP KORSANLARI", "HARRY POTTER", "AÇLIK OYUNLARI", "YEDİ", "ZİNDAN ADASI", "PRESTİJ", "AKIL OYUNLARI", "CAN DOSTUM", "ÜÇ İDİOT", "AMELIE", "SELVİ BOYLUM AL YAZMALIM", "NEŞELİ GÜNLER", "TOSUN PAŞA", "SÜT KARDEŞLER"], cat_celebrity: ["CEM YILMAZ", "SEZEN AKSU", "TARKAN", "AZİZ SANCAR", "MUSTAFA KEMAL ATATÜRK", "BARIŞ MANÇO", "KEMAL SUNAL", "ŞENER ŞEN", "ADİLE NAŞİT", "MÜNİR ÖZKUL", "ZEKİ MÜREN", "AJDA PEKKAN", "NURİ BİLGE CEYLAN", "ORHAN PAMUK", "FATİH SULTAN MEHMET", "MİMAR SİNAN", "MEVLANA", "YUNUS EMRE", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MOZART", "BEETHOVEN", "PİCASSO", "SALVADOR DALİ", "CHARLIE CHAPLIN", "MARILYN MONROE", "ELVIS PRESLEY", "MICHAEL JACKSON", "MADONNA", "FREDDIE MERCURY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "NEIL ARMSTRONG", "MARIE CURIE", "WILLIAM SHAKESPEARE", "PLATON", "ARİSTO", "SOKRATES", "NAPOLYON BONAPART", "JÜL SEZAR", "KRİSTOF KOLOMB", "VASCO DA GAMA"] },
-                    en: { cat_country: ["UNITED STATES", "CANADA", "AUSTRALIA", "BRAZIL", "JAPAN", "UNITED KINGDOM", "GERMANY", "FRANCE", "ITALY", "SPAIN", "RUSSIA", "CHINA", "INDIA", "MEXICO", "ARGENTINA", "EGYPT", "SOUTH AFRICA", "NIGERIA", "SWEDEN", "NORWAY", "FINLAND", "GREECE", "TURKEY", "POLAND", "NETHERLANDS", "BELGIUM", "PORTUGAL", "SWITZERLAND", "AUSTRIA", "IRELAND", "NEW ZEALAND", "SOUTH KOREA", "THAILAND", "VIETNAM", "INDONESIA", "MALAYSIA", "PHILIPPINES", "PAKISTAN", "IRAN", "IRAQ", "SAUDI ARABIA", "ISRAEL", "CHILE", "PERU", "COLOMBIA", "VENEZUELA", "CUBA", "JAMAICA", "KENYA", "ETHIOPIA"], cat_city: ["LONDON", "PARIS", "TOKYO", "NEW YORK", "SYDNEY", "ROME", "CAIRO", "MOSCOW", "BEIJING", "BERLIN", "MADRID", "ATHENS", "ISTANBUL", "DUBAI", "SINGAPORE", "HONG KONG", "BANGKOK", "SEOUL", "LOS ANGELES", "CHICAGO", "TORONTO", "VANCOUVER", "MEXICO CITY", "RIO DE JANEIro", "BUENOS AIRES", "LIMA", "BOGOTA", "AMSTERDAM", "BRUSSELS", "VIENNA", "PRAGUE", "BUDAPEST", "WARSAW", "STOCKHOLM", "OSLO", "COPENHAGEN", "HELSINKI", "DUBLIN", "LISBON", "MUMBAI", "DELHI", "SHANGHAI", "SAO PAULO", "LAGOS", "JOHANNESBURG", "NAIROBI", "JAKARTA", "MANILA", "KUALA LUMPUR", "TEHRAN"], cat_animal: ["LION", "TURTLE", "ELEPHANT", "DOLPHIN", "PENGUIN", "GIRAFFE", "MONKEY", "BUTTERFLY", "DOG", "CAT", "HORSE", "COW", "SHEEP", "GOAT", "CHICKEN", "PIG", "TIGER", "BEAR", "WOLF", "FOX", "DEER", "RABBIT", "SQUIRREL", "MOUSE", "SNAKE", "CROCODILE", "LIZARD", "FISH", "WHALE", "SHARK", "OCTOPUS", "SEAL", "EAGLE", "OWL", "PARROT", "SPARROW", "PIGEON", "ANT", "BEE", "SPIDER", "SCORPION", "CRAB", "LOBSTER", "KANGAROO", "KOALA", "PANDA", "RHINOCEROS", "HIPPOPOTAMUS", "ZEBRA", "CAMEL"], cat_movie: ["THE GODFATHER", "STAR WARS", "PULP FICTION", "TITANIC", "THE MATRIX", "AVATAR", "THE SHAWSHANK REDEMPTION", "THE DARK KNIGHT", "FORREST GUMP", "INCEPTION", "JURASSIC PARK", "THE LION KING", "AVENGERS ENDGAME", "LORD OF THE RINGS", "FIGHT CLUB", "THE SILENCE OF THE LAMBS", "SCHINDLERS LIST", "GOODFELLAS", "SEVEN", "THE USUAL SUSPECTS", "SAVING PRIVATE RYAN", "GLADIATOR", "ALIEN", "BLADE RUNNER", "BACK TO THE FUTURE", "INDIANA JONES", "JAWS", "THE EXORCIST", "PSYCHO", "CASABLANCA", "GONE WITH THE WIND", "THE WIZARD OF OZ", "CITIZEN KANE", "INTERSTELLAR", "PARASITE", "JOKER", "LA LA LAND", "THE REVENANT", "MAD MAX FURY ROAD", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "MADONNA", "MICHAEL JACKSON", "LEONARDO DICAPRIO", "BEYONCE", "ELVIS PRESLEY", "MARILYN MONROE", "TOM HANKS", "MERYL STREEP", "WILLIAM SHAKESPEARE", "ISAAC NEWTON", "MARTIN LUTHER KING", "NELSON MANDELA", "QUEEN ELIZABETH", "BARACK OBAMA", "OPRAH WINFREY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "JEFF BEZOS", "MARK ZUCKERBERG", "MUHAMMAD ALI", "MICHAEL JORDAN", "TIGER WOODS", "SERENA WILLIAMS", "LEBRON JAMES", "THE BEATLES", "THE ROLLING STONES", "BOB DYLAN", "JIMI HENDRIX", "ARETHA FRANKLIN", "STEVEN SPIELBERG", "QUENTIN TARANTINO", "MARTIN SCORSESE", "ALFRED HITCHCOCK", "WALT DISNEY", "CHARLIE CHAPLIN", "MARIE CURIE", "GALILEO GALILEI", "CHARLES DARWIN", "ABRAHAM LINCOLN", "WINSTON CHURCHILL", "JULIUS CAESAR", "CLEOPATRA", "JOAN OF ARC"] },
-                    es: { cat_country: ["ESPAÑA", "MÉXICO", "ARGENTINA", "COLOMBIA", "PERÚ", "CHILE", "VENEZUELA", "ECUADOR", "GUATEMALA", "CUBA", "BOLIVIA", "HONDURAS", "PARAGUAY", "URUGUAY", "COSTA RICA", "PANAMÁ", "NICARAGUA", "EL SALVADOR", "ITALIA", "FRANCIA", "PORTUGAL", "BRASIL", "ALEMANIA", "ESTADOS UNIDOS", "CANADÁ", "JAPÓN", "CHINA", "RUSIA", "INDIA", "EGIPTO", "MARRUECOS", "PORTUGAL", "GRECIA", "SUECIA", "NORUEGA", "DINAMARCA", "FINLANDIA", "POLONIA", "RUMANÍA", "HUNGRÍA", "AUSTRIA", "BÉLGICA", "PAÍSES BAJOS", "IRLANDA", "SUIZA", "AUSTRALIA", "NUEVA ZELANDA", "SUDÁFRICA", "NIGERIA", "KENIA"], cat_city: ["MADRID", "BARCELONA", "SEVILLA", "VALENCIA", "BILBAO", "BUENOS AIRES", "BOGOTÁ", "LIMA", "SANTIAGO", "CIUDAD DE MÉXICO", "GUADALAJARA", "MONTERREY", "CARACAS", "QUITO", "LA PAZ", "MONTEVIDEO", "ASUNCIÓN", "SAN JOSÉ", "LA HABANA", "PANAMÁ", "LISBOA", "ROMA", "PARİS", "LONDRES", "BERLİN", "ATENAS", "ESTOCOLMO", "OSLO", "COPENHAGUE", "ÁMSTERDAM", "BRUSELAS", "VIENA", "PRAGUE", "BUDAPEST", "VARSOVIA", "MOSCÚ", "TOKIO", "PEKİN", "NUEVA YORK", "LOS ÁNGELES", "MIAMI", "RÍO DE JANEIRO", "SÃO PAULO", "CAIRO", "SÍDNEY", "MELBOURNE", "TORONTO", "MONTREAL", "DUBLÍN", "EDIMBURGO"], cat_animal: ["PERRO", "GATO", "CABALLO", "VACA", "OVEJA", "CABRA", "CERDO", "GALLINA", "POLLO", "PATO", "PAVO", "PEZ", "SERPIENTE", "COCODRILO", "LAGARTO", "RATÓN", "ARDILLA", "CONEJO", "OSO", "LOBO", "ZORRO", "CIERVO", "ELEFANTE", "JIRAFA", "CEBRA", "MONO", "GORILA", "TIGRE", "LEÓN", "DELFÍN", "BALLENA", "TIBURÓN", "PULPO", "FOCA", "PINGÜINO", "ÁGUILA", "BÚHO", "LORO", "PALOMA", "HORMIGA", "ABEJA", "ARAÑA", "ESCORPIÓN", "CANGREJO", "LANGOSTA", "MARIPOSA", "CANGURO", "KOALA", "PANDA", "RINOCERONTE", "HIPOPÓTAMO", "CAMELLO"], cat_movie: ["EL PADRINO", "TITANIC", "LA VIDA ES BELLA", "EL REY LEÓN", "VOLVER AL FUTURO", "EL LABERINTO DEL FAUNO", "ROMA", "AMORES PERROS", "EL SECRETO DE SUS OJOS", "RELATOS SALVAJES", "CIUDAD DE DIOS", "PULP FICTION", "FORREST GUMP", "MATRIX", "GLADIADOR", "EL SILENCIO DE LOS CORDEROS", "PARÁSITOS", "JOKER", "COCO", "DIARIOS DE MOTOCICLETA", "TODO SOBRE MI MADRE", "HABLE CON ELLA", "MAR ADENTRO", "EL ORFANATO", "LOS OTROS", "EL HIJO DE LA NOVIA", "NUEVE REINAS", "EL CLUB DE LA PELEA", "LA LISTA DE SCHINDLER", "SALVAR AL SOLDADO RYAN", "EL PIANISTA", "EL VIAJE DE CHIHIRO", "EL CABALLERO OSCURO", "EL SEÑOR DE LOS ANILLOS", "LA GUERRA DE LAS GALAXIAS", "PARQUE JURÁSICO", "AVENGERS", "HARRY POTTER", "EL EXORCISTA", "PSICOSIS", "CASABLANCA"], cat_celebrity: ["PABLO PICASSO", "SHAKIRA", "LIONEL MESSI", "FRIDA KAHLO", "PENÉLOPE CRUZ", "JAVIER BARDEM", "GABRIEL GARCÍA MÁRQUEZ", "CERVANTES", "DIEGO MARADONA", "CHE GUEVARA", "PEDRO ALMODÓVAR", "SALVADOR DALÍ", "ANTONIO BANDERAS", "SOFÍA VERGARA", "ENRIQUE IGLESIAS", "JULIO IGLESIAS", "DIEGO RIVERA", "GARCÍA LORCA", "GAUDÍ", "GOYA", "VELÁZQUEZ", "PLATÓN", "ARISTÓTELES", "SÓCRATES", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MARIE CURIE", "NAPOLEÓN BONAPARTE", "JULIO CÉSAR", "CRISTÓBAL COLÓN", "SIMÓN BOLÍVAR", "FIDEL CASTRO", "PAPA FRANCISCO", "RIGOBERTA MENCHÚ", "GUSTAVO DUDAMEL", "CARLOS GARDEL", "CELIA CRUZ", "TITO PUENTE", "PAU GASOL", "RAFAEL NADAL", "FERNANDO ALONSO", "IKER CASILLAS"] },
-                    de: { cat_country: ["DEUTSCHLAND", "ÖSTERREICH", "SCHWEIZ", "FRANKREICH", "ITALIEN", "SPANIEN", "POLEN", "NIEDERLANDE", "BELGIEN", "DÄNEMARK", "SCHWEDEN", "NORWEGEN", "FINNLAND", "GRIECHENLAND", "TÜRKEI", "RUSSLAND", "BRASILIEN", "ARGENTINIEN", "MEXIKO", "KANADA", "USA", "AUSTRALIEN", "JAPAN", "CHINA", "INDIEN", "ÄGYPTEN", "SÜDAFRIKA", "NIGERIA", "KENIA", "MAROKKO", "PORTUGAL", "IRLAND", "UNGARN", "RUMÄNIEN", "TSCHECHIEN", "SLOWAKEI", "KROATIEN", "SERBIEN", "BOSNIEN", "SLOWENIEN", "ALBANIEN", "MAZEDONIEN", "BULGARIEN", "LITAUEN", "LETTLAND", "ESTLAND", "ISLAND", "LUXEMBURG", "LIECHTENSTEIN", "MONACO"], cat_city: ["BERLIN", "MÜNCHEN", "HAMBURG", "KÖLN", "FRANKFURT", "STUTTGART", "DÜSSELDORF", "WIEN", "ZÜRICH", "GENF", "SALZBURG", "INNSBRUCK", "GRAZ", "LINZ", "BASEL", "BERN", "LUZERN", "PARIS", "LONDON", "ROM", "MADRID", "BARCELONA", "AMSTERDAM", "BRÜSSEL", "KOPENHAGEN", "STOCKHOLM", "OSLO", "HELSINKI", "ATHEN", "ISTANBUL", "PRAG", "BUDAPEST", "WARSCHAU", "MOSKAU", "TOKIO", "NEW YORK", "LOS ANGELES", "SYDNEY", "PEKING", "SCHANGHAI", "HONGKONG", "SINGAPUR", "DUBAI", "KAIRO", "JOHANNESBURG", "RIO DE JANEIRO", "BUENOS AIRES", "MEXIKO STADT", "TORONTO"], cat_animal: ["HUND", "KATZE", "PFERD", "KUH", "SCHAF", "ZIEGE", "SCHWEIN", "HUHN", "HAHN", "ENTE", "GANS", "FISCH", "SCHLANGE", "KROKODIL", "ECHSE", "MAUS", "EICHHÖRNCHEN", "HASE", "BÄR", "WOLF", "FUCHS", "HIRSCH", "ELEFANT", "GIRAFFE", "ZEBRA", "AFFE", "GORILLA", "TIGER", "LÖWE", "DELFIN", "WAL", "HAI", "KRAKE", "ROBBE", "PINGUIN", "ADLER", "EULE", "PAPAGEI", "TAUBE", "AMEISE", "BIENE", "SPINNE", "SKORPION", "KREBS", "HUMMER", "SCHMETTERLING", "KÄNGURU", "KOALA", "PANDA", "NASHORN", "FLUSSPFERD", "KAMEL"], cat_movie: ["DAS BOOT", "LOLA RENNT", "DAS LEBEN DER ANDEREN", "GOOD BYE LENIN", "DER UNTERGANG", "DIE WELLE", "DAS WEISSE BAND", "METROPOLIS", "NOSFERATU", "DIE BLECHTROMMEL", "HIMMEL ÜBER BERLIN", " Aguirre, DER ZORN GOTTES", "FITZCARRALDO", "M", "DER BLAUE ENGEL", "DIE FETTEN JAHRE SIND VORBEI", "VIER MINUTEN", "TONI ERDMANN", "WERK OHNE AUTOR", "IM WESTEN NICHTS NEUES", "DER NAME DER ROSE", "CHRISTIANE F", "DIE UNENDLICHE GESCHICHTE", "DER BEWEGTE MANN", "KNOCKIN ON HEAVENS DOOR", "ABWÄRTS", "ROSSINI", "SCHTONK", "DAS EXPERIMENT", "DER BAADER MEINHOF KOMPLEX", "DIE FÄLSCHER", "JENSEITS VON AFRIKA", "DER LETZTE KAISER", "DER PIANIST", "INGLOURIOUS BASTERDS", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "JOHANN SEBASTIAN BACH", "LUDWIG VAN BEETHOVEN", "WOLFGANG AMADEUS MOZART", "JOHANN WOLFGANG VON GOETHE", "FRIEDRICH SCHILLER", "IMMANUEL KANT", "GEORG WILHELM FRIEDRICH HEGEL", "FRIEDRICH NIETZSCHE", "ANGELA MERKEL", "KARL MARX", "JOHANNES GUTENBERG", "MARTIN LUTHER", "ALBRECHT DÜRER", "MARLENE DIETRICH", "ROMy SCHNEIDER", "KLAUS KINSKI", "WERNER HERZOG", "WIM WENDERS", "RAINER WERNER FASSBINDER", "HEIDI KLUM", "BORIS BECKER", "STEFFI GRAF", "MICHAEL SCHUMACHER", "FRANZ BECKENBAUER", "HANNAH ARENDT", "BERTOLT BRECHT", "THOMAS MANN", "HERMANN HESSE", "GÜNTER GRASS", "MAX PLANCK", "WERNER HEISENBERG", "ROBERT KOCH", "ALEXANDER VON HUMBOLDT", "JACOB GRIMM", "WILHELM GRIMM", "KARL LAGERFELD", "CLAUDIA SCHIFFER"] },
-                    fr: { cat_country: ["FRANCE", "CANADA", "BELGIQUE", "SUISSE", "LUXEMBOURG", "ALGÉRIE", "MAROC", "TUNISIE", "SÉNÉGAL", "CÔTE D'IVOIRE", "ITALIE", "ESPAGNE", "ALLEMAGNE", "ROYAUME-UNI", "ÉTATS-UNIS", "BRÉSIL", "ARGENTINE", "MEXIQUE", "JAPON", "CHINE", "RUSSIA", "INDE", "ÉGYPTE", "GRÈCE", "PORTUGAL", "PAYS-BAS", "DANEMARK", "SUÈDE", "NORVÈGE", "FINLANDE", "POLOGNE", "AUTRICHE", "IRLANDE", "AUSTRALIE", "NOUVELLE-ZÉLANDE", "AFRIQUE DU SUD", "NIGÉRIA", "GHANA", "CAMEROUN", "MADAGASCAR", "VIETNAM", "LIBAN", "HAÏTI", "MONACO", "ANDORRE"], cat_city: ["PARIS", "MARSEILLE", "LYON", "TOULOUSE", "NICE", "NANTES", "STRASBOURG", "MONTPELLIER", "BORDEAUX", "LILLE", "GENÈVE", "BRUXELLES", "MONTRÉAL", "QUÉBEC", "LUXEMBOURG", "MONACO", "ALGER", "CASABLANCA", "TUNIS", "DAKAR", "ROME", "MADRID", "BARCELONE", "LONDRES", "BERLIN", "AMSTERDAM", "LISBONNE", "ATHÈNES", "VIENNE", "PRAGUE", "BUDAPEST", "VARSOVIE", "MOSCOU", "NEW YORK", "LOS ANGELES", "CHICAGO", "TORONTO", "SYDNEY", "TOKYO", "PÉKIN", "CAIRE", "RIO DE JANEIRO", "BUENOS AIRES"], cat_animal: ["CHIEN", "CHAT", "CHEVAL", "VACHE", "MOUTON", "CHÈVRE", "COCHON", "POULE", "COQ", "CANARD", "OIE", "POISSON", "SERPENT", "CROCODILE", "LÉZARD", "SOURIS", "ÉCUREUIL", "LAPIN", "OURS", "LOUP", "RENARD", "CERF", "ÉLÉPHANT", "GIRAFE", "ZÈBRE", "SINGE", "GORILLE", "TIGRE", "LION", "DAUPHIN", "BALEINE", "REQUIN", "PIEUVRE", "PHOQUE", "PINGOUIN", "AIGLE", "HIBOU", "PERROQUET", "PIGEON", "FOURMI", "ABEILLE", "ARAIGNÉE", "SCORPION", "CRABE", "HOMARD", "PAPILLON", "KANGOUROU", "KOALA", "PANDA", "RHINOCÉROS", "HIPPOPOTAME", "CHAMEAU"], cat_movie: ["INTOUCHABLES", "AMÉLIE", "LA HAINE", "LE DÎNER DE CONS", "LE FABULEUX DESTIN D'AMÉLIE POULAIN", "LA VIE EN ROSE", "LE GRAND BLEU", "TAXI", "ASTÉRIX ET OBÉLIX MISSION CLÉOPÂTRE", "LE CINQUIÈME ÉLÉMENT", "LÉON", "NIKITA", "LE PÈE NOËL EST UNE ORDURE", "LA CHÈVRE", "LES VISITEURS", "LA GRANDE VADROUILLE", "LE CORNIAUD", "LES AVENTURES DE RABBI JACOB", "LA BOUM", "LE PROFESSIONNEL", "UN PROPHÈTE", "LE CONCERT", "LA MÔME", "LE SCAPHANDRE ET LE PAPILLON", "LES CHORISTES", "UN LONG DIMANCHE DE FIANÇAILLES", "LE PACTE DES LOUPS", "LA CITÉ DE LA PEUR", "LES BRONZÉS FONT DU SKI", "LA GUERRE DES BOUTONS", "LE SALAIRE DE LA PEUR", "LES QUATRE CENTS COUPS", "À BOUT DE SOUFFLE", "JULES ET JIM", "LE MÉPRIS", "LE SAMOURAÏ"], cat_celebrity: ["ZINÉDINE ZIDANE", "EDITH PIAF", "MARION COTILLARD", "VICTOR HUGO", "NAPOLÉON BONAPARTE", "LOUIS XIV", "MOLIÈRE", "VOLTAIRE", "ROUSSEAU", "MARIE CURIE", "CHARLES DE GAULLE", "GÉRARD DEPARDIEU", "BRIGITTE BARDOT", "ALAIN DELON", "CATHERINE DENEUVE", "JEAN-PAUL BELMONDO", "LOUIS DE FUNÈS", "JOHNNY HALLYDAY", "CHARLES AZNAVOUR", "SERGE GAINSBOURG", "DAFT PUNK", "DAVID GUETTA", "JEAN RENO", "LUC BESSON", "FRANÇOIS TRUFFAUT", "JEAN-LUC GODARD", "AUGUSTE RENOIR", "CLAUDE MONET", "AUGUSTE RODIN", "GUSTAVE EIFFEL", "BLAISE PASCAL", "RENÉ DESCARTES", "JACQUES COUSTEAU", "COCO CHANEL", "CHRISTIAN DIOR", "YVES SAINT LAURENT", "MICHEL PLATINI", "THIERRY HENRY", "KYLIAN MBAPPÉ", "ANTOINE GRIEZMANN"] }
+                en: { 
+                    game_title:"Hangman", vs_pc:"Versus PC", two_player:"2 Player Mode", setup_tournament_title:"Tournament Setup", 
+                    player1_name_placeholder:"Player 1 Name", player2_name_placeholder:"Player 2 Name", rounds_label:"Number of Rounds:", 
+                    rounds_2:"2 Rounds", rounds_4:"4 Rounds", rounds_6:"6 Rounds", rounds_8:"8 Rounds", rounds_10:"10 Rounds", 
+                    start_tournament_btn:"Start Tournament", back_btn:"Back", 
+                    word_setup_title:"{player}, set the word... (Round {round}/{max})", select_category:"Select Category", 
+                    cat_celebrity:"Celebrity", cat_city:"City", cat_country:"Country", cat_animal:"Animal", cat_movie:"Movie Title", 
+                    cat_custom:"Other...", custom_category_placeholder:"Enter category name...", word_input_placeholder:"Enter the word...", 
+                    start_round_btn:"Start Round", back_to_settings_btn:"Back to Settings", mistakes_label:"Mistakes:", category_label:"Category:", 
+                    player_prompt_pc:"Try to find the word!", player_prompt_2p:"{player}, be quick and careful for the points!", 
+                    main_menu_btn:"Main Menu", new_game_btn:"New Game", next_round_btn:"Next Round", game_over_btn:"Game Over! See Results", 
+                    new_tournament_btn:"New Tournament", score_history_title:"Score History", close_btn:"Close", 
+                    extra_life_title:"+1 Extra Life", extra_life_desc:"Watch a short ad to get another chance.", 
+                    watch_ad_btn:"Watch Ad", no_thanks_btn:"No, thanks", confirm_home_title:"Return to Main Menu?", 
+                    confirm_home_desc:"Your current game progress will be lost. Are you sure?", yes_btn:"Yes, Return", no_btn:"No, Stay", 
+                    confirm_restart_title:"Restart Game?", confirm_restart_desc:"The current word will be cancelled and a new one will be chosen.", 
+                    yes_restart_btn:"Yes, Restart", no_cancel_btn:"No, Cancel", alert_no_word_cat:"Please enter a word and select a category!", 
+                    win_message:"Congratulations, You Won!", lose_message:"You Lost!", correct_word_was:"The correct word was:", 
+                    round_end_win:"Great! You earned {score} points!", round_end_lose:"You missed! 0 Points.", game_over_title:"Game Over!", 
+                    winner_is:"{player} Wins!", tie_game:"It's a Tie!", final_scores:"Final Scores:",
+                    clear_all_scores_btn:"Clear All Records", score_record_pc:"PC Mode", score_record_2p:"2 Player Mode",
+                    score_record_date:"Date", score_record_time:"Time", score_record_mistakes:"Mistakes", 
+                    score_record_extra_life:"Extra Life", score_record_yes:"Yes", score_record_no:"No",
+                    score_record_word:"Word", score_record_category:"Category", score_record_score:"Score",
+                    score_record_player1:"Player 1", score_record_player2:"Player 2", score_record_final_score:"Final Score",
+                    no_score_records:"No score records yet.",
+                    score_summary_pc:"PC Mode Summary", score_summary_2p:"2 Player Mode Summary",
+                    total_games:"Total Games", total_score:"Total Score", average_score:"Average Score",
+                    best_score:"Best Score", wins:"Wins", losses:"Losses",
+                    time_label:"Time:"
+                },
+                de: { 
+                    game_title:"Galgenmännchen", vs_pc:"Gegen den PC", two_player:"2-Spieler-Modus", setup_tournament_title:"Turniereinstellungen", 
+                    player1_name_placeholder:"Spieler 1 Name", player2_name_placeholder:"Spieler 2 Name", rounds_label:"Rundenzahl:", 
+                    rounds_2:"2 Runden", rounds_4:"4 Runden", rounds_6:"6 Runden", rounds_8:"8 Runden", rounds_10:"10 Runden", 
+                    start_tournament_btn:"Turnier starten", back_btn:"Zurück", 
+                    word_setup_title:"{player}, wähle das Wort... (Runde {round}/{max})", select_category:"Kategorie wählen", 
+                    cat_celebrity:"Berühmtheit", cat_city:"Stadt", cat_country:"Land", cat_animal:"Tier", cat_movie:"Filmtitel", 
+                    cat_custom:"Andere...", custom_category_placeholder:"Kategorienamen eingeben...", word_input_placeholder:"Wort eingeben...", 
+                    start_round_btn:"Runde starten", back_to_settings_btn:"Zurück zu den Einstellungen", mistakes_label:"Fehler:", category_label:"Kategorie:", 
+                    player_prompt_pc:"Versuche, das Wort zu finden!", player_prompt_2p:"{player}, sei schnell und vorsichtig für die Punkte!", 
+                    main_menu_btn:"Hauptmenü", new_game_btn:"Neues Spiel", next_round_btn:"Nächste Runde", game_over_btn:"Spiel vorbei! Ergebnisse", 
+                    new_tournament_btn:"Neues Turnier", score_history_title:"Punktverlauf", close_btn:"Schließen", 
+                    extra_life_title:"+1 Extraleben", extra_life_desc:"Sieh dir eine kurze Werbung an, um eine weitere Chance zu erhalten.", 
+                    watch_ad_btn:"Werbung ansehen", no_thanks_btn:"Nein, danke", confirm_home_title:"Zum Hauptmenü zurückkehren?", 
+                    confirm_home_desc:"Dein aktueller Spielfortschritt geht verloren. Sicher?", yes_btn:"Ja, zurück", no_btn:"Nein, bleiben", 
+                    confirm_restart_title:"Spiel neu starten?", confirm_restart_desc:"Das aktuelle Wort wird verworfen und ein neues gewählt.", 
+                    yes_restart_btn:"Ja, Neustart", no_cancel_btn:"Nein, abbrechen", alert_no_word_cat:"Bitte gib ein Wort ein und wähle eine Kategorie!", 
+                    win_message:"Glückwunsch, du hast gewonnen!", lose_message:"Du hast verloren!", correct_word_was:"Das richtige Wort war:", 
+                    round_end_win:"Super! {score} Punkte erhalten!", round_end_lose:"Nicht geschafft! 0 Punkte.", game_over_title:"Spiel vorbei!", 
+                    winner_is:"{player} gewinnt!", tie_game:"Unentschieden!", final_scores:"Endergebnis:",
+                    clear_all_scores_btn:"Alle Aufzeichnungen löschen", score_record_pc:"PC-Modus", score_record_2p:"2-Spieler-Modus",
+                    score_record_date:"Datum", score_record_time:"Zeit", score_record_mistakes:"Fehler", 
+                    score_record_extra_life:"Extraleben", score_record_yes:"Ja", score_record_no:"Nein",
+                    score_record_word:"Wort", score_record_category:"Kategorie", score_record_score:"Punkte",
+                    score_record_player1:"Spieler 1", score_record_player2:"Spieler 2", score_record_final_score:"Endergebnis",
+                    no_score_records:"Noch keine Punktaufzeichnungen.",
+                    score_summary_pc:"PC-Modus-Zusammenfassung", score_summary_2p:"2-Spieler-Modus-Zusammenfassung",
+                    total_games:"Gesamtspiele", total_score:"Gesamtpunktzahl", average_score:"Durchschnittspunktzahl",
+                    best_score:"Beste Punktzahl", wins:"Siege", losses:"Niederlagen",
+                    time_label:"Zeit:"
+                },
+                es: { 
+                    game_title:"Ahorcado", vs_pc:"Contra la PC", two_player:"Modo 2 Jugadores", setup_tournament_title:"Ajustes del Torneo", 
+                    player1_name_placeholder:"Nombre Jugador 1", player2_name_placeholder:"Nombre Jugador 2", rounds_label:"Número de Rondas:", 
+                    rounds_2:"2 Rondas", rounds_4:"4 Rondas", rounds_6:"6 Rondas", rounds_8:"8 Rondas", rounds_10:"10 Rondas", 
+                    start_tournament_btn:"Iniciar Torneo", back_btn:"Volver", 
+                    word_setup_title:"{player}, elige la palabra... (Ronda {round}/{max})", select_category:"Seleccionar Categoría", 
+                    cat_celebrity:"Famoso", cat_city:"Ciudad", cat_country:"País", cat_animal:"Animal", cat_movie:"Película", 
+                    cat_custom:"Otro...", custom_category_placeholder:"Introduce categoría...", word_input_placeholder:"Introduce la palabra...", 
+                    start_round_btn:"Iniciar Ronda", back_to_settings_btn:"Volver a Ajustes", mistakes_label:"Errores:", category_label:"Categoría:", 
+                    player_prompt_pc:"¡Intenta encontrar la palabra!", player_prompt_2p:"¡{player}, sé rápido y cuidadoso por los puntos!", 
+                    main_menu_btn:"Menú Principal", new_game_btn:"Nuevo Juego", next_round_btn:"Siguiente Ronda", game_over_btn:"¡Fin del juego! Ver Resultados", 
+                    new_tournament_btn:"Nuevo Torneo", score_history_title:"Historial de Puntuación", close_btn:"Cerrar", 
+                    extra_life_title:"+1 Vida Extra", extra_life_desc:"Mira un breve anuncio para tener otra oportunidad.", 
+                    watch_ad_btn:"Ver Anuncio", no_thanks_btn:"No, gracias", confirm_home_title:"¿Volver al Menú Principal?", 
+                    confirm_home_desc:"Tu progreso actual se perderá. ¿Estás seguro?", yes_btn:"Sí, volver", no_btn:"No, quedarse", 
+                    confirm_restart_title:"¿Reiniciar Juego?", confirm_restart_desc:"La palabra actual será cancelada y se elegirá una nueva.", 
+                    yes_restart_btn:"Sí, reiniciar", no_cancel_btn:"No, cancelar", alert_no_word_cat:"¡Por favor, introduce una palabra y selecciona una categoría!", 
+                    win_message:"¡Felicidades, has ganado!", lose_message:"¡Has perdido!", correct_word_was:"La palabra correcta era:", 
+                    round_end_win:"¡Genial! ¡Has ganado {score} puntos!", round_end_lose:"¡Fallaste! 0 Puntos.", game_over_title:"¡Fin del Juego!", 
+                    winner_is:"¡{player} Gana!", tie_game:"¡Es un Empate!", final_scores:"Puntuaciones Finales:",
+                    clear_all_scores_btn:"Borrar Todos los Registros", score_record_pc:"Modo PC", score_record_2p:"Modo 2 Jugadores",
+                    score_record_date:"Fecha", score_record_time:"Tiempo", score_record_mistakes:"Errores", 
+                    score_record_extra_life:"Vida Extra", score_record_yes:"Sí", score_record_no:"No",
+                    score_record_word:"Palabra", score_record_category:"Categoría", score_record_score:"Puntuación",
+                    score_record_player1:"Jugador 1", score_record_player2:"Jugador 2", score_record_final_score:"Puntuación Final",
+                    no_score_records:"Aún no hay registros de puntuación.",
+                    score_summary_pc:"Resumen del Modo PC", score_summary_2p:"Resumen del Modo 2 Jugadores",
+                    total_games:"Total de Juegos", total_score:"Puntuación Total", average_score:"Puntuación Promedio",
+                    best_score:"Mejor Puntuación", wins:"Victorias", losses:"Derrotas",
+                    time_label:"Tiempo:"
+                },
+                fr: { 
+                    game_title:"Le Pendu", vs_pc:"Contre l'IA", two_player:"Mode 2 Joueurs", setup_tournament_title:"Configuration du Tournoi", 
+                    player1_name_placeholder:"Nom Joueur 1", player2_name_placeholder:"Nom Joueur 2", rounds_label:"Nombre de Manches :", 
+                    rounds_2:"2 Manches", rounds_4:"4 Manches", rounds_6:"6 Manches", rounds_8:"8 Manches", rounds_10:"10 Manches", 
+                    start_tournament_btn:"Démarrer le Tournoi", back_btn:"Retour", 
+                    word_setup_title:"{player}, définis le mot... (Manche {round}/{max})", select_category:"Choisir une catégorie", 
+                    cat_celebrity:"Célébrité", cat_city:"Ville", cat_country:"Pays", cat_animal:"Animal", cat_movie:"Film", 
+                    cat_custom:"Autre...", custom_category_placeholder:"Entrez la catégorie...", word_input_placeholder:"Entrez le mot...", 
+                    start_round_btn:"Démarrer la Manche", back_to_settings_btn:"Retour aux réglages", mistakes_label:"Erreurs :", category_label:"Catégorie :", 
+                    player_prompt_pc:"Essayez de trouver le mot !", player_prompt_2p:"{player}, sois rapide et prudent pour les points !", 
+                    main_menu_btn:"Menu Principal", new_game_btn:"Nouveau Jeu", next_round_btn:"Manche Suivante", game_over_btn:"Fin de partie ! Voir les résultats", 
+                    new_tournament_btn:"Nouveau Tournoi", score_history_title:"Historique des scores", close_btn:"Fermer", 
+                    extra_life_title:"+1 Vie Supplémentaire", extra_life_desc:"Regardez une courte publicité pour obtenir une autre chance.", 
+                    watch_ad_btn:"Regarder la pub", no_thanks_btn:"Non, merci", confirm_home_title:"Retourner au menu principal ?", 
+                    confirm_home_desc:"Votre progression actuelle sera perdue. Êtes-vous sûr ?", yes_btn:"Oui, retourner", no_btn:"Non, rester", 
+                    confirm_restart_title:"Recommencer la partie ?", confirm_restart_desc:"Le mot actuel sera annulé et un nouveau sera choisi.", 
+                    yes_restart_btn:"Oui, recommencer", no_cancel_btn:"Non, annuler", alert_no_word_cat:"Veuillez entrer un mot et sélectionner une catégorie !", 
+                    win_message:"Félicitations, vous avez gagné !", lose_message:"Vous avez perdu !", correct_word_was:"Le mot correct était :", 
+                    round_end_win:"Génial ! Vous avez gagné {score} points !", round_end_lose:"Vous avez raté ! 0 Points.", game_over_title:"Fin de la partie !", 
+                    winner_is:"{player} gagne !", tie_game:"Égalité !", final_scores:"Scores finaux :",
+                    clear_all_scores_btn:"Effacer Tous les Enregistrements", score_record_pc:"Mode PC", score_record_2p:"Mode 2 Joueurs",
+                    score_record_date:"Date", score_record_time:"Temps", score_record_mistakes:"Errores", 
+                    score_record_extra_life:"Vie Supplémentaire", score_record_yes:"Oui", score_record_no:"Non",
+                    score_record_word:"Mot", score_record_category:"Catégorie", score_record_score:"Score",
+                    score_record_player1:"Joueur 1", score_record_player2:"Joueur 2", score_record_final_score:"Score Final",
+                    no_score_records:"Aucun enregistrement de score pour le moment.",
+                    score_summary_pc:"Résumé du Mode PC", score_summary_2p:"Résumé du Mode 2 Joueurs",
+                    total_games:"Total des Parties", total_score:"Score Total", average_score:"Score Moyen",
+                    best_score:"Meilleur Score", wins:"Victoires", losses:"Défaites",
+                    time_label:"Temps:"
                 }
-            };
+            },
+            pcWordDatabase: {
+                tr: { cat_country: ["TÜRKİYE", "ALMANYA", "JAPONYA", "BREZİLYA", "KANADA", "AVUSTRALYA", "YUNANİSTAN", "İSPANYA", "İTALYA", "FRANSA", "İNGİLTERE", "RUSYA", "ÇİN", "HİNDİSTAN", "MEKSİKA", "ARJANTİN", "MISIR", "NORVEÇ", "İSVEÇ", "FİNLANDİYA", "PORTEKİZ", "HOLLANDA", "BELÇİKA", "AVUSTURYA", "İSVİÇRE", "POLONYA", "MACARİSTAN", "ROMANYA", "UKRAYNA", "İRAN", "IRAK", "SURİYE", "LÜBNAN", "ÜRDÜN", "İSRAİL", "FİLİSTİN", "SUUDİ ARABİSTAN", "KATAR", "KUVEYT", "ENDONEZYA", "MALEZYA", "TAYLAND", "VİETNAM", "GÜNEY KORE", "ŞİLİ", "PERU", "KOLOMBİYA", "VENEZUELA", "NİJERYA", "GÜNEY AFRİKA"], cat_city: ["İSTANBUL", "ANKARA", "İZMİR", "BURSA", "ADANA", "GAZİANTEP", "KONYA", "ANTALYA", "DİYARBAKIR", "KAYSERİ", "MERSİN", "ESKİŞEHİR", "DENİZLİ", "SAMSUN", "ŞANLIURFA", "MALATYA", "ERZURUM", "VAN", "TRABZON", "SİVAS", "EDİRNE", "MUĞLA", "AYDIN", "BALIKESİR", "MANİSA", "KOCAELİ", "SAKARYA", "PARİS", "LONDRA", "ROMA", "BERLİN", "MOSKOVA", "TOKYO", "PEKİN", "KAHİRE", "NEW YORK", "LOS ANGELES", "SYDNEY", "MADRİD", "ATİNA", "AMSTERDAM", "VİYANA", "PRAG", "BUDAPEŞTE", "VARŞOVA", "STOKHOLM", "OSLO", "HELSİNKİ", "KOPENHAG", "LİZBON"], cat_animal: ["ASLAN", "KAPLUMBAĞA", "PENGUEN", "ZÜRAFA", "KANGURU", "YUNUS", "FİL", "MAYMUN", "KELEBEK", "KÖPEK", "KEDİ", "AT", "EŞEK", "İNEK", "KOYUN", "KEÇİ", "TAVUK", "HOROZ", "ÖRDEK", "BALIK", "YILAN", "TİMSAH", "KERTENKELE", "FARE", "SİNCAP", "TAVŞAN", "AYI", "KURT", "TİLKİ", "GEYİK", "ZEBRA", "PANDA", "KOALA", "DEVE", "BALİNA", "FOK", "KARTAL", "ŞAHİN", "BAYKUŞ", "PAPAĞAN", "GÜVERCİN", "KARINCA", "ARI", "SİVRİSİNEK", "ÇEKİRGE", "ÖRÜMCEK", "AKREP", "YENGEÇ", "İSTAKOZ", "AHTAPOT"], cat_movie: ["BABA", "ESARETİN BEDELİ", "YÜZÜKLERİN EFENDİSİ", "KARANLIK ŞÖVALYE", "HABABAM SINIFI", "EŞKIYA", "GORA", "VİZONTELE", "BABAM VE OĞLUM", "KIŞ UYKUSU", "MATRIX", "FORREST GUMP", "TİTANİK", "GLADYATÖR", "YEŞİL YOL", "UCUZ ROMAN", "DÖVÜŞ KULÜBÜ", "BAŞLANGİÇ", "YILDIZLARARASI", "PARAZİT", "JOKER", "AVATAR", "YENİLMEZLER", "ASLAN KRAL", "GELECEĞE DÖNÜŞ", "PİYANİST", "HIZLI VE ÖFKELİ", "KARAYİP KORSANLARI", "HARRY POTTER", "AÇLIK OYUNLARI", "YEDİ", "ZİNDAN ADASI", "PRESTİJ", "AKIL OYUNLARI", "CAN DOSTUM", "ÜÇ İDİOT", "AMELIE", "SELVİ BOYLUM AL YAZMALIM", "NEŞELİ GÜNLER", "TOSUN PAŞA", "SÜT KARDEŞLER"], cat_celebrity: ["CEM YILMAZ", "SEZEN AKSU", "TARKAN", "AZİZ SANCAR", "MUSTAFA KEMAL ATATÜRK", "BARIŞ MANÇO", "KEMAL SUNAL", "ŞENER ŞEN", "ADİLE NAŞİT", "MÜNİR ÖZKUL", "ZEKİ MÜREN", "AJDA PEKKAN", "NURİ BİLGE CEYLAN", "ORHAN PAMUK", "FATİH SULTAN MEHMET", "MİMAR SİNAN", "MEVLANA", "YUNUS EMRE", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MOZART", "BEETHOVEN", "PİCASSO", "SALVADOR DALİ", "CHARLIE CHAPLIN", "MARILYN MONROE", "ELVIS PRESLEY", "MICHAEL JACKSON", "MADONNA", "FREDDIE MERCURY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "NEIL ARMSTRONG", "MARIE CURIE", "WILLIAM SHAKESPEARE", "PLATON", "ARİSTO", "SOKRATES", "NAPOLYON BONAPART", "JÜL SEZAR", "KRİSTOF KOLOMB", "VASCO DA GAMA"] },
+                en: { cat_country: ["UNITED STATES", "CANADA", "AUSTRALIA", "BRAZIL", "JAPAN", "UNITED KINGDOM", "GERMANY", "FRANCE", "ITALY", "SPAIN", "RUSSIA", "CHINA", "INDIA", "MEXICO", "ARGENTINA", "EGYPT", "SOUTH AFRICA", "NIGERIA", "SWEDEN", "NORWAY", "FINLAND", "GREECE", "TURKEY", "POLAND", "NETHERLANDS", "BELGIUM", "PORTUGAL", "SWITZERLAND", "AUSTRIA", "IRELAND", "NEW ZEALAND", "SOUTH KOREA", "THAILAND", "VIETNAM", "INDONESIA", "MALAYSIA", "PHILIPPINES", "PAKISTAN", "IRAN", "IRAQ", "SAUDI ARABIA", "ISRAEL", "CHILE", "PERU", "COLOMBIA", "VENEZUELA", "CUBA", "JAMAICA", "KENYA", "ETHIOPIA"], cat_city: ["LONDON", "PARIS", "TOKYO", "NEW YORK", "SYDNEY", "ROME", "CAIRO", "MOSCOW", "BEIJING", "BERLIN", "MADRID", "ATHENS", "ISTANBUL", "DUBAI", "SINGAPORE", "HONG KONG", "BANGKOK", "SEOUL", "LOS ANGELES", "CHICAGO", "TORONTO", "VANCOUVER", "MEXICO CITY", "RIO DE JANEIRO", "BUENOS AIRES", "LIMA", "BOGOTA", "AMSTERDAM", "BRUSSELS", "VIENNA", "PRAGUE", "BUDAPEST", "WARSAW", "STOCKHOLM", "OSLO", "COPENHAGEN", "HELSINKI", "DUBLIN", "LISBON", "MUMBAI", "DELHI", "SHANGHAI", "SAO PAULO", "LAGOS", "JOHANNESBURG", "NAIROBI", "JAKARTA", "MANILA", "KUALA LUMPUR", "TEHRAN"], cat_animal: ["LION", "TURTLE", "ELEPHANT", "DOLPHIN", "PENGUIN", "GIRAFFE", "MONKEY", "BUTTERFLY", "DOG", "CAT", "HORSE", "COW", "SHEEP", "GOAT", "CHICKEN", "PIG", "TIGER", "BEAR", "WOLF", "FOX", "DEER", "RABBIT", "SQUIRREL", "MOUSE", "SNAKE", "CROCODILE", "LIZARD", "FISH", "WHALE", "SHARK", "OCTOPUS", "SEAL", "EAGLE", "OWL", "PARROT", "SPARROW", "PIGEON", "ANT", "BEE", "SPIDER", "SCORPION", "CRAB", "LOBSTER", "KANGAROO", "KOALA", "PANDA", "RHINOCEROS", "HIPPOPOTAMUS", "ZEBRA", "CAMEL"], cat_movie: ["THE GODFATHER", "STAR WARS", "PULP FICTION", "TITANIC", "THE MATRIX", "AVATAR", "THE SHAWSHANK REDEMPTION", "THE DARK KNIGHT", "FORREST GUMP", "INCEPTION", "JURASSIC PARK", "THE LION KING", "AVENGERS ENDGAME", "LORD OF THE RINGS", "FIGHT CLUB", "THE SILENCE OF THE LAMBS", "SCHINDLERS LIST", "GOODFELLAS", "SEVEN", "THE USUAL SUSPECTS", "SAVING PRIVATE RYAN", "GLADIATOR", "ALIEN", "BLADE RUNNER", "BACK TO THE FUTURE", "INDIANA JONES", "JAWS", "THE EXORCIST", "PSYCHO", "CASABLANCA", "GONE WITH THE WIND", "THE WIZARD OF OZ", "CITIZEN KANE", "INTERSTELLAR", "PARASITE", "JOKER", "LA LA LAND", "THE REVENANT", "MAD MAX FURY ROAD", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "MADONNA", "MICHAEL JACKSON", "LEONARDO DICAPRIO", "BEYONCE", "ELVIS PRESLEY", "MARILYN MONROE", "TOM HANKS", "MERYL STREEP", "WILLIAM SHAKESPEARE", "ISAAC NEWTON", "MARTIN LUTHER KING", "NELSON MANDELA", "QUEEN ELIZABETH", "BARACK OBAMA", "OPRAH WINFREY", "STEVE JOBS", "BILL GATES", "ELON MUSK", "JEFF BEZOS", "MARK ZUCKERBERG", "MUHAMMAD ALI", "MICHAEL JORDAN", "TIGER WOODS", "SERENA WILLIAMS", "LEBRON JAMES", "THE BEATLES", "THE ROLLING STONES", "BOB DYLAN", "JIMI HENDRIX", "ARETHA FRANKLIN", "STEVEN SPIELBERG", "QUENTIN TARANTINO", "MARTIN SCORSESE", "ALFRED HITCHCOCK", "WALT DISNEY", "CHARLIE CHAPLIN", "MARIE CURIE", "GALILEO GALILEI", "CHARLES DARWIN", "ABRAHAM LINCOLN", "WINSTON CHURCHILL", "JULIUS CAESAR", "CLEOPATRA", "JOAN OF ARC"] },
+                es: { cat_country: ["ESPAÑA", "MÉXICO", "ARGENTINA", "COLOMBIA", "PERÚ", "CHILE", "VENEZUELA", "ECUADOR", "GUATEMALA", "CUBA", "BOLIVIA", "HONDURAS", "PARAGUAY", "URUGUAY", "COSTA RICA", "PANAMÁ", "NICARAGUA", "EL SALVADOR", "ITALIA", "FRANCIA", "PORTUGAL", "BRASIL", "ALEMANIA", "ESTADOS UNIDOS", "CANADÁ", "JAPÓN", "CHINA", "RUSIA", "INDIA", "EGIPTO", "MARRUECOS", "PORTUGAL", "GRECIA", "SUECIA", "NORUEGA", "DINAMARCA", "FINLANDIA", "POLONIA", "RUMANÍA", "HUNGRÍA", "AUSTRIA", "BÉLGICA", "PAÍSES BAJOS", "IRLANDA", "SUIZA", "AUSTRALIA", "NUEVA ZELANDA", "SUDÁFRICA", "NIGERIA", "KENIA"], cat_city: ["MADRID", "BARCELONA", "SEVILLA", "VALENCIA", "BILBAO", "BUENOS AIRES", "BOGOTÁ", "LIMA", "SANTIAGO", "CIUDAD DE MÉXICO", "GUADALAJARA", "MONTERREY", "CARACAS", "QUITO", "LA PAZ", "MONTEVIDEO", "ASUNCIÓN", "SAN JOSÉ", "LA HABANA", "PANAMÁ", "LISBOA", "ROMA", "PARÍS", "LONDRES", "BERLÍN", "ATENAS", "ESTOCOLMO", "OSLO", "COPENHAGUE", "ÁMSTERDAM", "BRUSELAS", "VIENA", "PRAGA", "BUDAPEST", "VARSOVIA", "MOSCÚ", "TOKIO", "PEKÍN", "NUEVA YORK", "LOS ÁNGELES", "MIAMI", "RÍO DE JANEIRO", "SÃO PAULO", "CAIRO", "SÍDNEY", "MELBOURNE", "TORONTO", "MONTREAL", "DUBLÍN", "EDIMBURGO"], cat_animal: ["PERRO", "GATO", "CABALLO", "VACA", "OVEJA", "CABRA", "CERDO", "GALLINA", "POLLO", "PATO", "PAVO", "PEZ", "SERPIENTE", "COCODRILO", "LAGARTO", "RATÓN", "ARDILLA", "CONEJO", "OSO", "LOBO", "ZORRO", "CIERVO", "ELEFANTE", "JIRAFA", "ZEBRA", "MONO", "GORILA", "TIGRE", "LEÓN", "DELFÍN", "BALLENA", "TIBURÓN", "PULPO", "FOCA", "PINGÜINO", "ÁGUILA", "BÚHO", "LORO", "PALOMA", "HORMIGA", "ABEJA", "ARAÑA", "ESCORPIÓN", "CANGREJO", "LANGOSTA", "MARIPOSA", "CANGURO", "KOALA", "PANDA", "RINOCERONTE", "HIPOPÓTAMO", "CAMELLO"], cat_movie: ["EL PADRINO", "TITANIC", "LA VIDA ES BELLA", "EL REY LEÓN", "VOLVER AL FUTURO", "EL LABERINTO DEL FAUNO", "ROMA", "AMORES PERROS", "EL SECRETO DE SUS OJOS", "RELATOS SALVAJES", "CIUDAD DE DIOS", "PULP FICTION", "FORREST GUMP", "MATRIX", "GLADIADOR", "EL SILENCIO DE LOS CORDEROS", "PARÁSITOS", "JOKER", "COCO", "DIARIOS DE MOTOCICLETA", "TODO SOBRE MI MADRE", "HABLE CON ELLA", "MAR ADENTRO", "EL ORFANATO", "LOS OTROS", "EL HIJO DE LA NOVIA", "NUEVE REINAS", "EL CLUB DE LA PELEA", "LA LISTA DE SCHINDLER", "SALVAR AL SOLDADO RYAN", "EL PIANISTA", "EL VIAJE DE CHIHIRO", "EL CABALLERO OSCURO", "EL SEÑOR DE LOS ANILLOS", "LA GUERRA DE LAS GALAXIAS", "PARQUE JURÁSICO", "AVENGERS", "HARRY POTTER", "EL EXORCISTA", "PSICOSIS", "CASABLANCA"], cat_celebrity: ["PABLO PICASSO", "SHAKIRA", "LIONEL MESSI", "FRIDA KAHLO", "PENÉLOPE CRUZ", "JAVIER BARDEM", "GABRIEL GARCÍA MÁRQUEZ", "CERVANTES", "DIEGO MARADONA", "CHE GUEVARA", "PEDRO ALMODÓVAR", "SALVADOR DALÍ", "ANTONIO BANDERAS", "SOFÍA VERGARA", "ENRIQUE IGLESIAS", "JULIO IGLESIAS", "DIEGO RIVERA", "GARCÍA LORCA", "GAUDÍ", "GOYA", "VELÁZQUEZ", "PLATÓN", "ARISTÓTELES", "SÓCRATES", "ALBERT EINSTEIN", "ISAAC NEWTON", "GALILEO GALILEI", "LEONARDO DA VINCI", "MARIE CURIE", "NAPOLEÓN BONAPARTE", "JULIO CÉSAR", "CRISTÓBAL COLÓN", "SIMÓN BOLÍVAR", "FIDEL CASTRO", "PAPA FRANCISCO", "RIGOBERTA MENCHÚ", "GUSTAVO DUDAMEL", "CARLOS GARDEL", "CELIA CRUZ", "TITO PUENTE", "PAU GASOL", "RAFAEL NADAL", "FERNANDO ALONSO", "IKER CASILLAS"] },
+                de: { cat_country: ["DEUTSCHLAND", "ÖSTERREICH", "SCHWEIZ", "FRANKREICH", "ITALIEN", "SPANIEN", "POLEN", "NIEDERLANDE", "BELGIEN", "DÄNEMARK", "SCHWEDEN", "NORWEGEN", "FINNLAND", "GRIECHENLAND", "TÜRKEI", "RUSSLAND", "BRASILIEN", "ARGENTINIEN", "MEXIKO", "KANADA", "USA", "AUSTRALIEN", "JAPAN", "CHINA", "INDIEN", "ÄGYPTEN", "SÜDAFRIKA", "NIGERIA", "KENIA", "MAROKKO", "PORTUGAL", "IRLANDA", "UNGARN", "RUMÄNIEN", "TSCHECHIEN", "SLOWAKEI", "KROATIEN", "SERBIEN", "BOSNIEN", "SLOWENIEN", "ALBANIEN", "MAZEDONIEN", "BULGARIEN", "LITAUEN", "LETTLAND", "ESTLAND", "ISLAND", "LUXEMBURG", "LIECHTENSTEIN", "MONACO"], cat_city: ["BERLIN", "MÜNCHEN", "HAMBURG", "KÖLN", "FRANKFURT", "STUTTGART", "DÜSSELDORF", "WIEN", "ZÜRICH", "GENF", "SALZBURG", "INNSBRUCK", "GRAZ", "LINZ", "BASEL", "BERN", "LUZERN", "PARIS", "LONDON", "ROM", "MADRID", "BARCELONA", "AMSTERDAM", "BRÜSSEL", "KOPENHAGEN", "STOCKHOLM", "OSLO", "HELSINKI", "ATHEN", "ISTANBUL", "PRAG", "BUDAPEST", "WARSCHAU", "MOSKAU", "TOKIO", "NEW YORK", "LOS ANGELES", "SYDNEY", "PEKING", "SCHANGHAI", "HONGKONG", "SINGAPUR", "DUBAI", "KAIRO", "JOHANNESBURG", "RIO DE JANEIRO", "BUENOS AIRES", "MEXIKO STADT", "TORONTO"], cat_animal: ["HUND", "KATZE", "PFERD", "KUH", "SCHAF", "ZIEGE", "SCHWEIN", "HUHN", "HAHN", "ENTE", "GANS", "FISCH", "SCHLANGE", "KROKODIL", "ECHSE", "MAUS", "EICHHÖRNCHEN", "HASE", "BÄR", "WOLF", "FUCHS", "HIRSCH", "ELEFANT", "GIRAFFE", "ZEBRA", "AFFE", "GORILLA", "TIGER", "LÖWE", "DELFIN", "WAL", "HAI", "KRAKE", "ROBBE", "PINGUIN", "ADLER", "EULE", "PAPAGEI", "TAUBE", "AMEISE", "BIENE", "SPINNE", "SKORPION", "KREBS", "HUMMER", "SCHMETTERLING", "KÄNGURU", "KOALA", "PANDA", "NASHORN", "FLUSSPFERD", "KAMEL"], cat_movie: ["DAS BOOT", "LOLA RENNT", "DAS LEBEN DER ANDEREN", "GOOD BYE LENIN", "DER UNTERGANG", "DIE WELLE", "DAS WEISSE BAND", "METROPOLIS", "NOSFERATU", "DIE BLECHTROMMEL", "HIMMEL ÜBER BERLIN", "AGUIRRE, DER ZORN GOTTES", "FITZCARRALDO", "M", "DER BLAUE ENGEL", "DIE FETTEN JAHRE SIND VORBEI", "VIER MINUTEN", "TONI ERDMANN", "WERK OHNE AUTOR", "IM WESTEN NICHTS NEUES", "DER NAME DER ROSE", "CHRISTIANE F", "DIE UNENDLICHE GESCHICHTE", "DER BEWEGTE MANN", "KNOCKIN ON HEAVENS DOOR", "ABWÄRTS", "ROSSINI", "SCHTONK", "DAS EXPERIMENT", "DER BAADER MEINHOF KOMPLEX", "DIE FÄLSCHER", "JENSEITS VON AFRIKA", "DER LETZTE KAISER", "DER PIANIST", "INGLOURIOUS BASTERDS", "DJANGO UNCHAINED"], cat_celebrity: ["ALBERT EINSTEIN", "JOHANN SEBASTIAN BACH", "LUDWIG VAN BEETHOVEN", "WOLFGANG AMADEUS MOZART", "JOHANN WOLFGANG VON GOETHE", "FRIEDRICH SCHILLER", "IMMANUEL KANT", "GEORG WILHELM FRIEDRICH HEGEL", "FRIEDRICH NIETZSCHE", "ANGELA MERKEL", "KARL MARX", "JOHANNES GUTENBERG", "MARTIN LUTHER", "ALBRECHT DÜRER", "MARLENE DIETRICH", "ROMY SCHNEIDER", "KLAUS KINSKI", "WERNER HERZOG", "WIM WENDERS", "RAINER WERNER FASSBINDER", "HEIDI KLUM", "BORIS BECKER", "STEFFI GRAF", "MICHAEL SCHUMACHER", "FRANZ BECKENBAUER", "HANNAH ARENDT", "BERTOLT BRECHT", "THOMAS MANN", "HERMANN HESSE", "GÜNTER GRASS", "MAX PLANCK", "WERNER HEISENBERG", "ROBERT KOCH", "ALEXANDER VON HUMBOLDT", "JACOB GRIMM", "WILHELM GRIMM", "KARL LAGERFELD", "CLAUDIA SCHIFFER"] },
+                fr: { cat_country: ["FRANCE", "CANADA", "BELGIQUE", "SUISSE", "LUXEMBOURG", "ALGÉRIE", "MAROC", "TUNISIE", "SÉNÉGAL", "CÔTE D'IVOIRE", "ITALIE", "ESPAGNE", "ALLEMAGNE", "ROYAUME-UNI", "ÉTATS-UNIS", "BRÉSIL", "ARGENTINE", "MEXIQUE", "JAPON", "CHINE", "RUSSIE", "INDE", "ÉGYPTE", "GRÈCE", "PORTUGAL", "PAYS-BAS", "DANEMARK", "SUÈDE", "NORVÈGE", "FINLANDE", "POLOGNE", "AUTRICHE", "IRLANDE", "AUSTRALIE", "NOUVELLE-ZÉLANDE", "AFRIQUE DU SUD", "NIGÉRIA", "GHANA", "CAMEROUN", "MADAGASCAR", "VIETNAM", "LIBAN", "HAÏTI", "MONACO", "ANDORRE"], cat_city: ["PARIS", "MARSEILLE", "LYON", "TOULOUSE", "NICE", "NANTES", "STRASBOURG", "MONTPELLIER", "BORDEAUX", "LILLE", "GENÈVE", "BRUXELLES", "MONTRÉAL", "QUÉBEC", "LUXEMBOURG", "MONACO", "ALGER", "CASABLANCA", "TUNIS", "DAKAR", "ROME", "MADRID", "BARCELONE", "LONDRES", "BERLIN", "AMSTERDAM", "LISBONNE", "ATHÈNES", "VIENNE", "PRAGUE", "BUDAPEST", "VARSOVIE", "MOSCOU", "TOKIO", "NEW YORK", "LOS ANGELES", "CHICAGO", "TORONTO", "SYDNEY", "PEKIN", "CAIRE", "RIO DE JANEIRO", "BUENOS AIRES"], cat_animal: ["CHIEN", "CHAT", "CHEVAL", "VACHE", "MOUTON", "CHÈVRE", "COCHON", "POULE", "COQ", "CANARD", "OIE", "POISSON", "SERPENT", "CROCODILE", "LÉZARD", "SOURIS", "ÉCUREUIL", "LAPIN", "OURS", "LOUP", "RENARD", "CERF", "ÉLÉPHANT", "GIRAFE", "ZÈBRE", "SINGE", "GORILLE", "TIGRE", "LION", "DAUPHIN", "BALEINE", "REQUIN", "PIEUVRE", "PHOQUE", "PINGOUIN", "AIGLE", "HIBOU", "PERROQUET", "PIGEON", "FOURMI", "ABEILLE", "ARAIGNÉE", "SCORPION", "CRABE", "HOMARD", "PAPILLON", "KANGOUROU", "KOALA", "PANDA", "RHINOCÉROS", "HIPPOPOTAME", "CHAMEAU"], cat_movie: ["INTOUCHABLES", "AMÉLIE", "LA HAINE", "LE DÎNER DE CONS", "LE FABULEUX DESTIN D'AMÉLIE POULAIN", "LA VIE EN ROSE", "LE GRAND BLEU", "TAXI", "ASTÉRIX ET OBÉLIX MISSION CLÉOPÂTRE", "LE CINQUIÈME ÉLÉMENT", "LÉON", "NIKITA", "LE PÈRE NOËL EST UNE ORDURE", "LA CHÈVRE", "LES VISITEURS", "LA GRANDE VADROUILLE", "LE CORNIAUD", "LES AVENTURES DE RABBI JACOB", "LA BOUM", "LE PROFESSIONNEL", "UN PROPHÈTE", "LE CONCERT", "LA MÔME", "LE SCAPHANDRE ET LE PAPILLON", "LES CHORISTES", "UN LONG DIMANCHE DE FIANÇAILLES", "LE PACTE DES LOUPS", "LA CITÉ DE LA PEUR", "LES BRONZÉS FONT DU SKI", "LA GUERRE DES BOUTONS", "LE SALAIRE DE LA PEUR", "LES QUATRE CENTS COUPS", "À BOUT DE SOUFFLE", "JULES ET JIM", "LE MÉPRIS", "LE SAMOURAÏ"], cat_celebrity: ["ZINÉDINE ZIDANE", "EDITH PIAF", "MARION COTILLARD", "VICTOR HUGO", "NAPOLÉON BONAPARTE", "LOUIS XIV", "MOLIÈRE", "VOLTAIRE", "ROUSSEAU", "MARIE CURIE", "CHARLES DE GAULLE", "GÉRARD DEPARDIEU", "BRIGITTE BARDOT", "ALAIN DELON", "CATHERINE DENEUVE", "JEAN-PAUL BELMONDO", "LOUIS DE FUNÈS", "JOHNNY HALLYDAY", "CHARLES AZNAVOUR", "SERGE GAINSBOURG", "DAFT PUNK", "DAVID GUETTA", "JEAN RENO", "LUC BESSON", "FRANÇOIS TRUFFAUT", "JEAN-LUC GODARD", "AUGUSTE RENOIR", "CLAUDE MONET", "AUGUSTE RODIN", "GUSTAVE EIFFEL", "BLAISE PASCAL", "RENÉ DESCARTES", "JACQUES COUSTEAU", "COCO CHANEL", "CHRISTIAN DIOR", "YVES SAINT LAURENT", "MICHEL PLATINI", "THIERRY HENRY", "KYLIAN MBAPPÉ", "ANTOINE GRIEZMANN"] }
+            }
+        };
 
-            const getTranslation = (key) => { const lang = state.currentLanguage; return (data.languageStrings[lang] && data.languageStrings[lang][key]) || data.languageStrings.en[key] || ''; };
-            const updateUIForLanguage = () => { document.documentElement.lang = state.currentLanguage; document.querySelectorAll('[data-key]').forEach(el => { const translation = getTranslation(el.getAttribute('data-key')); if (translation) el.innerText = translation; }); document.querySelectorAll('[data-key-placeholder]').forEach(el => { const translation = getTranslation(el.getAttribute('data-key-placeholder')); if (translation) el.placeholder = translation; }); };
-            const populateLanguageMenu = () => { dom.languageMenu.innerHTML = ''; for (const [code, name] of Object.entries(data.languages)) { const li = document.createElement('li'); li.textContent = name; li.dataset.lang = code; if (code === state.currentLanguage) li.classList.add('active'); dom.languageMenu.appendChild(li); } };
-            const showScreen = (screenToShow) => {
-                dom.screens.forEach(s => s.classList.remove('active'));
-                screenToShow.classList.add('active');
-            };
-            const updateMistakeCounter = () => { dom.mistakeDisplay.textContent = `${getTranslation('mistakes_label')} ${state.wrongGuesses}/${state.maxWrongGuesses}`; };
-            const handleGuess = (letter, btn) => { btn.disabled = true; state.guessedLetters.push(letter); if (state.secretWord.includes(letter)) { if (!state.isMuted) correctSound.play().catch(e => {}); renderWordDisplay(); } else { state.wrongGuesses++; updateMistakeCounter(); updateHangmanDrawing(); if (!state.isMuted) errorSound.play().catch(e => {}); } if (state.gameMode === 'pc' && state.wrongGuesses === state.maxWrongGuesses - 1 && !dom.extraLifeBtn.disabled) { dom.extraLifeBtn.classList.add('pulse-danger'); } checkGameStatus(); };
-            const checkGameStatus = () => { const isWinner = state.secretWord.split('').every(c => state.guessedLetters.includes(c) || c === ' '); if (isWinner) { if (!state.isMuted) winSound.play().catch(e => {}); if (state.gameMode === '2p') handleRoundEnd(true); else handlePcGameEnd(true); } else if (state.wrongGuesses >= state.maxWrongGuesses) { if (!state.isMuted) loseSound.play().catch(e => {}); if (state.gameMode === '2p') handleRoundEnd(false); else handlePcGameEnd(false); } };
-            const setupPcGame = () => { 
-                state.gameMode = 'pc'; 
-                state.pcGameStartTime = Date.now();
-                state.extraLifeUsed = false;
-                dom.extraLifeBtn.disabled = false; 
-                dom.extraLifeBtn.classList.remove('pulse-danger'); 
-                const db = data.pcWordDatabase[state.currentLanguage] || data.pcWordDatabase.en; 
-                const categories = Object.keys(db); 
-                const randomCategoryKey = categories[Math.floor(Math.random() * categories.length)]; 
-                const randomCategoryText = getTranslation(randomCategoryKey); 
-                const words = db[randomCategoryKey]; 
-                const randomWord = words[Math.floor(Math.random() * words.length)]; 
-                startGame(randomWord, randomCategoryText); 
-            };
-            const startGame = (word, category) => {
-                state.secretWord = word.toLocaleUpperCase(state.currentLanguage);
-                state.currentCategoryText = category;
-                state.guessedLetters = [];
-                state.wrongGuesses = 0;
-                dom.gameContainer.dataset.gameMode = state.gameMode;
-                showScreen(dom.gameScreen);
-                const words = state.secretWord.split(' ');
-                if (words.length === 1 && words[0] === '') { // Boş kelime girilirse oyunu başlatma
-                    resetToMainMenu();
-                    alert('Lütfen geçerli bir kelime girin.'); // Uyar
-                    return;
-                }
-                const longestWordLength = Math.max(...words.map(w => w.length));
-                const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-                const containerPadding = 1.5 * rootFontSize * 2;
-                const availableWidth = dom.gameContainer.clientWidth - containerPadding - 1;
-                const gap = 0.6 * rootFontSize;
-                let calculatedBoxWidth = (availableWidth - (longestWordLength - 1) * gap) / longestWordLength;
-                const maxWidth = 55;
-                const minWidth = 24;
-                calculatedBoxWidth = Math.max(minWidth, Math.min(calculatedBoxWidth, maxWidth));
-                dom.wordDisplay.style.setProperty('--letter-box-size', `${calculatedBoxWidth}px`);
-                renderWordDisplay();
-                createKeyboard();
-                updateHangmanDrawing();
-                dom.gameStats.style.visibility = 'visible';
-                updateMistakeCounter();
-                if (state.gameMode === '2p') {
-                    dom.timerDisplay.style.display = 'inline-block';
-                    dom.scoreboard.style.display = 'flex';
-                    updateScoreboard();
-                    dom.playerPrompt.textContent = getTranslation('player_prompt_2p').replace('{player}', state.currentPlayerGuesser);
-                    startTimer();
-                } else {
-                    dom.timerDisplay.style.display = 'none';
-                    dom.scoreboard.style.display = 'none';
-                    dom.playerPrompt.textContent = getTranslation('player_prompt_pc');
-                }
-                dom.categoryDisplayGame.textContent = `${getTranslation('category_label')} ${state.currentCategoryText}`;
-            };
-            const renderWordDisplay = () => {
-                const words = state.secretWord.split(' ');
-                 if (words.length === 1 && words[0] === '') {
-                    dom.wordDisplay.innerHTML = '';
-                    return;
-                }
-                const html = words.map(word => {
-                    const lettersHtml = word.split('').map(char => 
-                        `<div class="letter-placeholder">${state.guessedLetters.includes(char) ? char : ''}</div>`
-                    ).join('');
-                    return `<div class="word-line">${lettersHtml}</div>`;
-                }).join('');
-                dom.wordDisplay.innerHTML = html;
-            };
-            const createKeyboard = () => { dom.keyboardContainer.innerHTML = ''; const alphabet = data.alphabets[state.currentLanguage] || data.alphabets.en; alphabet.split('').forEach(letter => { const btn = document.createElement('button'); btn.innerText = letter; btn.addEventListener('click', () => handleGuess(letter, btn)); dom.keyboardContainer.appendChild(btn); }); };
-            const updateHangmanDrawing = () => dom.hangmanParts.forEach((part, i) => part.style.visibility = i < state.wrongGuesses ? 'visible' : 'hidden');
-            const toggleTheme = () => { state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark'; dom.body.dataset.theme = state.currentTheme; localStorage.setItem('hangman_theme', state.currentTheme); };
-            const toggleSound = () => { state.isMuted = !state.isMuted; localStorage.setItem('hangman_isMuted', state.isMuted); dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊'; };
-            const stopTimer = () => clearInterval(state.timerInterval);
-            const calculateScore = () => Math.max(0, 1000 - (state.seconds * 10) - (state.wrongGuesses * 50));
-            const updateScoreboard = () => { dom.scoreboard.innerHTML = `<div class="score-display" id="p1-score-display">👤 ${state.p1Name}: ${state.p1Score}</div><div class="score-display" id="p2-score-display">👤 ${state.p2Name}: ${state.p2Score}</div>`; document.querySelectorAll('.score-display').forEach(el => el.classList.remove('active-turn')); if (state.currentPlayerGuesser === state.p1Name) document.getElementById('p1-score-display').classList.add('active-turn'); else document.getElementById('p2-score-display').classList.add('active-turn'); };
-            const startTimer = () => { if (state.gameMode !== '2p') return; state.seconds = 0; dom.timerDisplay.textContent = '00:00'; state.timerInterval = setInterval(() => { state.seconds++; const minutes = Math.floor(state.seconds / 60).toString().padStart(2, '0'); const seconds = (state.seconds % 60).toString().padStart(2, '0'); dom.timerDisplay.textContent = `${minutes}:${seconds}`; }, 1000); };
-            const handleRoundEnd = (isWin) => { stopTimer(); const score = isWin ? calculateScore() : 0; if (state.currentPlayerGuesser === state.p1Name) state.p1Score += score; else state.p2Score += score; state.roundHistory.push({ round: state.currentRound, setter: state.currentPlayerSetter, guesser: state.currentPlayerGuesser, score: score, word: state.secretWord }); dom.historyBtn.disabled = false; dom.resultMessage.className = isWin ? 'win' : 'lose'; dom.resultMessage.textContent = isWin ? getTranslation('round_end_win').replace('{score}', score) : getTranslation('round_end_lose'); dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; dom.nextActionBtn.textContent = (state.currentRound < state.maxRounds) ? getTranslation('next_round_btn') : getTranslation('game_over_btn'); dom.resultModal.classList.add('show'); };
-            const setupNewRound = () => { if (state.currentRound >= state.maxRounds) { endGame(); return; } state.currentRound++; state.currentPlayerSetter = (state.currentRound % 2 !== 0) ? state.p1Name : state.p2Name; state.currentPlayerGuesser = (state.currentRound % 2 !== 0) ? state.p2Name : state.p1Name; dom.wordSetupTitle.innerHTML = getTranslation('word_setup_title').replace('{player}', `<span class="player-name">${state.currentPlayerSetter}</span>`).replace('{round}', state.currentRound).replace('{max}', state.maxRounds); dom.wordSetupForm.reset(); dom.customCategoryInput.style.display = 'none'; showScreen(dom.wordSetupScreen); };
-            const endGame = () => { 
-                state.gamePhase = 'game-over'; 
-                stopTimer(); 
-                let winnerMessage; 
-                if (state.p1Score > state.p2Score) winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p1Name} 🏆`); 
-                else if (state.p2Score > state.p1Score) winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p2Name} 🏆`); 
-                else winnerMessage = getTranslation('tie_game'); 
-                dom.resultMessage.className = 'win'; 
-                dom.resultMessage.innerHTML = `${getTranslation('game_over_title')}<br>${winnerMessage}`; 
-                dom.correctWordDisplay.innerHTML = `<strong>${getTranslation('final_scores')}</strong><br>${state.p1Name}: ${state.p1Score} | ${state.p2Name}: ${state.p2Score}`; 
-                dom.nextActionBtn.textContent = getTranslation('new_tournament_btn'); 
+        const getTranslation = (key) => { const lang = state.currentLanguage; return (data.languageStrings[lang] && data.languageStrings[lang][key]) || data.languageStrings.en[key] || ''; };
+        const updateUIForLanguage = () => { document.documentElement.lang = state.currentLanguage; document.querySelectorAll('[data-key]').forEach(el => { const translation = getTranslation(el.getAttribute('data-key')); if (translation) el.innerText = translation; }); document.querySelectorAll('[data-key-placeholder]').forEach(el => { const translation = getTranslation(el.getAttribute('data-key-placeholder')); if (translation) el.placeholder = translation; }); };
+        const populateLanguageMenu = () => { dom.languageMenu.innerHTML = ''; for (const [code, name] of Object.entries(data.languages)) { const li = document.createElement('li'); li.textContent = name; li.dataset.lang = code; if (code === state.currentLanguage) li.classList.add('active'); dom.languageMenu.appendChild(li); } };
+        const showScreen = (screenToShow) => {
+            dom.screens.forEach(s => s.classList.remove('active'));
+            screenToShow.classList.add('active');
+        };
+        const updateMistakeCounter = () => { dom.mistakeDisplay.textContent = `${getTranslation('mistakes_label')} ${state.wrongGuesses}/${state.maxWrongGuesses}`; };
+        const handleGuess = (letter, btn) => { btn.disabled = true; state.guessedLetters.push(letter); if (state.secretWord.includes(letter)) { if (!state.isMuted) correctSound.play().catch(e => {}); renderWordDisplay(); } else { state.wrongGuesses++; updateMistakeCounter(); updateHangmanDrawing(); if (!state.isMuted) errorSound.play().catch(e => {}); } if (state.gameMode === 'pc' && state.wrongGuesses === state.maxWrongGuesses - 1 && !dom.extraLifeBtn.disabled) { dom.extraLifeBtn.classList.add('pulse-danger'); } checkGameStatus(); };
+        const checkGameStatus = () => { const isWinner = state.secretWord.split('').every(c => state.guessedLetters.includes(c) || c === ' '); if (isWinner) { if (!state.isMuted) winSound.play().catch(e => {}); if (state.gameMode === '2p') handleRoundEnd(true); else handlePcGameEnd(true); } else if (state.wrongGuesses >= state.maxWrongGuesses) { if (!state.isMuted) loseSound.play().catch(e => {}); if (state.gameMode === '2p') handleRoundEnd(false); else handlePcGameEnd(false); } };
+        
+        // YENİ: Düzeltilmiş zamanlayıcı fonksiyonları
+        const startTimer = () => { 
+            // Önceki zamanlayıcıyı temizle (çakışmayı önlemek için)
+            stopTimer();
+            
+            if (state.gameMode !== 'pc' && state.gameMode !== '2p') return; 
+            state.seconds = 0; 
+            dom.timerDisplay.textContent = '00:00'; 
+            state.timerInterval = setInterval(() => { 
+                state.seconds++; 
+                const minutes = Math.floor(state.seconds / 60).toString().padStart(2, '0'); 
+                const seconds = (state.seconds % 60).toString().padStart(2, '0'); 
+                dom.timerDisplay.textContent = `${minutes}:${seconds}`; 
+            }, 1000); // 1000ms = 1 saniye (düzgün zamanlama)
+        };
+
+        // YENİ: Geliştirilmiş zamanlayıcı durdurma
+        const stopTimer = () => {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null; // Referansı temizle
+            }
+        };
+
+        const calculateScore = () => Math.max(0, 1000 - (state.seconds * 10) - (state.wrongGuesses * 50));
+        
+        const setupPcGame = () => { 
+            state.gameMode = 'pc'; 
+            state.pcGameStartTime = Date.now();
+            state.seconds = 0;
+            state.extraLifeUsed = false;
+            dom.extraLifeBtn.disabled = false; 
+            dom.extraLifeBtn.classList.remove('pulse-danger'); 
+            
+            // Zaman sayacını sıfırla ve göster
+            dom.timerDisplay.textContent = '00:00';
+            dom.timerDisplay.style.display = 'inline-block';
+            dom.timerLabel.style.display = 'inline-block';
+            dom.timerLabel.textContent = getTranslation('time_label');
+            
+            const db = data.pcWordDatabase[state.currentLanguage] || data.pcWordDatabase.en; 
+            const categories = Object.keys(db); 
+            const randomCategoryKey = categories[Math.floor(Math.random() * categories.length)]; 
+            const randomCategoryText = getTranslation(randomCategoryKey); 
+            const words = db[randomCategoryKey]; 
+            const randomWord = words[Math.floor(Math.random() * words.length)]; 
+            
+            // Oyunu başlatmadan önce zamanlayıcıyı başlat
+            startGame(randomWord, randomCategoryText); 
+        };
+        
+        const startGame = (word, category) => {
+            state.secretWord = word.toLocaleUpperCase(state.currentLanguage);
+            state.currentCategoryText = category;
+            state.guessedLetters = [];
+            state.wrongGuesses = 0;
+            dom.gameContainer.dataset.gameMode = state.gameMode;
+            showScreen(dom.gameScreen);
+            const words = state.secretWord.split(' ');
+            if (words.length === 1 && words[0] === '') {
+                resetToMainMenu();
+                alert('Lütfen geçerli bir kelime girin.');
+                return;
+            }
+            const longestWordLength = Math.max(...words.map(w => w.length));
+            const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            const containerPadding = 1.5 * rootFontSize * 2;
+            const availableWidth = dom.gameContainer.clientWidth - containerPadding - 1;
+            const gap = 0.6 * rootFontSize;
+            let calculatedBoxWidth = (availableWidth - (longestWordLength - 1) * gap) / longestWordLength;
+            const maxWidth = 55;
+            const minWidth = 24;
+            calculatedBoxWidth = Math.max(minWidth, Math.min(calculatedBoxWidth, maxWidth));
+            dom.wordDisplay.style.setProperty('--letter-box-size', `${calculatedBoxWidth}px`);
+            renderWordDisplay();
+            createKeyboard();
+            updateHangmanDrawing();
+            dom.gameStats.style.visibility = 'visible';
+            updateMistakeCounter();
+            if (state.gameMode === '2p') {
+                dom.timerDisplay.style.display = 'inline-block';
+                dom.timerLabel.style.display = 'inline-block';
+                dom.timerLabel.textContent = getTranslation('time_label');
+                dom.scoreboard.style.display = 'flex';
+                updateScoreboard();
+                dom.playerPrompt.textContent = getTranslation('player_prompt_2p').replace('{player}', state.currentPlayerGuesser);
+                startTimer();
+            } else {
+                // PC modunda zaman sayacını göster ve başlat
+                dom.timerDisplay.style.display = 'inline-block';
+                dom.timerLabel.style.display = 'inline-block';
+                dom.timerLabel.textContent = getTranslation('time_label');
+                dom.scoreboard.style.display = 'none';
+                dom.playerPrompt.textContent = getTranslation('player_prompt_pc');
+                startTimer();
+            }
+            dom.categoryDisplayGame.textContent = `${getTranslation('category_label')} ${state.currentCategoryText}`;
+        };
+        
+        const renderWordDisplay = () => {
+            const words = state.secretWord.split(' ');
+             if (words.length === 1 && words[0] === '') {
+                dom.wordDisplay.innerHTML = '';
+                return;
+            }
+            const html = words.map(word => {
+                const lettersHtml = word.split('').map(char => 
+                    `<div class="letter-placeholder">${state.guessedLetters.includes(char) ? char : ''}</div>`
+                ).join('');
+                return `<div class="word-line">${lettersHtml}</div>`;
+            }).join('');
+            dom.wordDisplay.innerHTML = html;
+        };
+        const createKeyboard = () => { dom.keyboardContainer.innerHTML = ''; const alphabet = data.alphabets[state.currentLanguage] || data.alphabets.en; alphabet.split('').forEach(letter => { const btn = document.createElement('button'); btn.innerText = letter; btn.addEventListener('click', () => handleGuess(letter, btn)); dom.keyboardContainer.appendChild(btn); }); };
+        const updateHangmanDrawing = () => dom.hangmanParts.forEach((part, i) => part.style.visibility = i < state.wrongGuesses ? 'visible' : 'hidden');
+        const toggleTheme = () => { state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark'; dom.body.dataset.theme = state.currentTheme; localStorage.setItem('hangman_theme', state.currentTheme); };
+        const toggleSound = () => { state.isMuted = !state.isMuted; localStorage.setItem('hangman_isMuted', state.isMuted); dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊'; };
+        
+        const updateScoreboard = () => { dom.scoreboard.innerHTML = `<div class="score-display" id="p1-score-display">👤 ${state.p1Name}: ${state.p1Score}</div><div class="score-display" id="p2-score-display">👤 ${state.p2Name}: ${state.p2Score}</div>`; document.querySelectorAll('.score-display').forEach(el => el.classList.remove('active-turn')); if (state.currentPlayerGuesser === state.p1Name) document.getElementById('p1-score-display').classList.add('active-turn'); else document.getElementById('p2-score-display').classList.add('active-turn'); };
+        
+        const handleRoundEnd = (isWin) => { 
+            stopTimer(); 
+            const score = isWin ? calculateScore() : 0; 
+            if (state.currentPlayerGuesser === state.p1Name) state.p1Score += score; 
+            else state.p2Score += score; 
+            state.roundHistory.push({ round: state.currentRound, setter: state.currentPlayerSetter, guesser: state.currentPlayerGuesser, score: score, word: state.secretWord }); 
+            dom.historyBtn.disabled = false; 
+            dom.resultMessage.className = isWin ? 'win' : 'lose'; 
+            dom.resultMessage.textContent = isWin ? getTranslation('round_end_win').replace('{score}', score) : getTranslation('round_end_lose'); 
+            dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; 
+            dom.nextActionBtn.textContent = (state.currentRound < state.maxRounds) ? getTranslation('next_round_btn') : getTranslation('game_over_btn'); 
+            dom.resultModal.classList.add('show'); 
+        };
+        
+        const setupNewRound = () => { 
+            if (state.currentRound >= state.maxRounds) { 
+                endGame(); 
+                return; 
+            } 
+            state.currentRound++; 
+            state.currentPlayerSetter = (state.currentRound % 2 !== 0) ? state.p1Name : state.p2Name; 
+            state.currentPlayerGuesser = (state.currentRound % 2 !== 0) ? state.p2Name : state.p1Name; 
+            dom.wordSetupTitle.innerHTML = getTranslation('word_setup_title').replace('{player}', `<span class="player-name">${state.currentPlayerSetter}</span>`).replace('{round}', state.currentRound).replace('{max}', state.maxRounds); 
+            dom.wordSetupForm.reset(); 
+            dom.customCategoryInput.style.display = 'none'; 
+            showScreen(dom.wordSetupScreen); 
+        };
+        
+        const endGame = () => { 
+            state.gamePhase = 'game-over'; 
+            stopTimer(); 
+            let winnerMessage; 
+            if (state.p1Score > state.p2Score) winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p1Name} 🏆`); 
+            else if (state.p2Score > state.p1Score) winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p2Name} 🏆`); 
+            else winnerMessage = getTranslation('tie_game'); 
+            dom.resultMessage.className = 'win'; 
+            dom.resultMessage.innerHTML = `${getTranslation('game_over_title')}<br>${winnerMessage}`; 
+            dom.correctWordDisplay.innerHTML = `<strong>${getTranslation('final_scores')}</strong><br>${state.p1Name}: ${state.p1Score} | ${state.p2Name}: ${state.p2Score}`; 
+            dom.nextActionBtn.textContent = getTranslation('new_tournament_btn'); 
+            dom.resultModal.classList.add('show'); 
+            
+            // 2 kişilik mod skor kaydını kaydet
+            saveScoreRecord('2p', {
+                player1: state.p1Name,
+                player2: state.p2Name,
+                finalScore: `${state.p1Score} - ${state.p2Score}`,
+                winner: state.p1Score > state.p2Score ? state.p1Name : state.p2Score > state.p1Score ? state.p2Name : 'Tie',
+                rounds: state.maxRounds
+            });
+        };
+        
+        const showHistoryModal = () => { dom.historyDetails.innerHTML = ''; state.roundHistory.forEach(round => { dom.historyDetails.innerHTML += `<div class="history-round"><h4>Raund ${round.round}</h4><p>Kelime: <strong>${round.word}</strong></p><p>Soruyu Soran: ${round.setter} | Tahmin Eden: ${round.guesser}</p><p>Kazanılan Puan: <span class="score">${round.score}</span></p></div>`; }); dom.historyModal.classList.add('show'); };
+        
+        const handlePcGameEnd = (isWin) => { 
+            if(state.gameMode === 'pc'){ 
+                const endTime = Date.now();
+                const timeSpent = Math.floor((endTime - state.pcGameStartTime) / 1000);
+                const minutes = Math.floor(timeSpent / 60).toString().padStart(2, '0');
+                const seconds = (timeSpent % 60).toString().padStart(2, '0');
+                const timeString = `${minutes}:${seconds}`;
+                
+                // Oyun bitti, zaman sayacını durdur
+                stopTimer();
+                
+                // PC modunda zamanı göster (son zamanı)
+                dom.timerDisplay.textContent = timeString;
+                
+                dom.resultMessage.className = isWin ? 'win' : 'lose'; 
+                dom.resultMessage.textContent = isWin ? getTranslation('win_message') : getTranslation('lose_message'); 
+                dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; 
+                dom.nextActionBtn.textContent = getTranslation('new_game_btn'); 
                 dom.resultModal.classList.add('show'); 
                 
-                // 2 kişilik mod skor kaydını kaydet
-                saveScoreRecord('2p', {
-                    player1: state.p1Name,
-                    player2: state.p2Name,
-                    finalScore: `${state.p1Score} - ${state.p2Score}`,
-                    winner: state.p1Score > state.p2Score ? state.p1Name : state.p2Score > state.p1Score ? state.p2Name : 'Tie',
-                    rounds: state.maxRounds
-                });
+                // PC mod skor kaydını kaydet
+                if (isWin) {
+                    saveScoreRecord('pc', {
+                        time: timeString,
+                        mistakes: state.wrongGuesses,
+                        extraLifeUsed: state.extraLifeUsed,
+                        word: state.secretWord,
+                        category: state.currentCategoryText,
+                        score: calculatePcScore(timeSpent, state.wrongGuesses, state.extraLifeUsed)
+                    });
+                }
+            } 
+        };
+        
+        const calculatePcScore = (timeSpent, mistakes, extraLifeUsed) => {
+            let score = 1000;
+            score -= timeSpent * 2;
+            score -= mistakes * 50;
+            if (extraLifeUsed) score -= 100;
+            return Math.max(0, score);
+        };
+        
+        const saveScoreRecord = (mode, details) => {
+            const scoreRecords = JSON.parse(localStorage.getItem('hangman_score_records') || '[]');
+            const record = {
+                id: Date.now(),
+                mode: mode,
+                date: new Date().toLocaleString(state.currentLanguage),
+                details: details
             };
-            const showHistoryModal = () => { dom.historyDetails.innerHTML = ''; state.roundHistory.forEach(round => { dom.historyDetails.innerHTML += `<div class="history-round"><h4>Raund ${round.round}</h4><p>Kelime: <strong>${round.word}</strong></p><p>Soruyu Soran: ${round.setter} | Tahmin Eden: ${round.guesser}</p><p>Kazanılan Puan: <span class="score">${round.score}</span></p></div>`; }); dom.historyModal.classList.add('show'); };
-            const handlePcGameEnd = (isWin) => { 
-                if(state.gameMode === 'pc'){ 
-                    const endTime = Date.now();
-                    const timeSpent = Math.floor((endTime - state.pcGameStartTime) / 1000);
-                    const minutes = Math.floor(timeSpent / 60).toString().padStart(2, '0');
-                    const seconds = (timeSpent % 60).toString().padStart(2, '0');
-                    const timeString = `${minutes}:${seconds}`;
-                    
-                    dom.resultMessage.className = isWin ? 'win' : 'lose'; 
-                    dom.resultMessage.textContent = isWin ? getTranslation('win_message') : getTranslation('lose_message'); 
-                    dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; 
-                    dom.nextActionBtn.textContent = getTranslation('new_game_btn'); 
-                    dom.resultModal.classList.add('show'); 
-                    
-                    // PC mod skor kaydını kaydet
-                    if (isWin) {
-                        saveScoreRecord('pc', {
-                            time: timeString,
-                            mistakes: state.wrongGuesses,
-                            extraLifeUsed: state.extraLifeUsed,
-                            word: state.secretWord,
-                            category: state.currentCategoryText,
-                            score: calculatePcScore(timeSpent, state.wrongGuesses, state.extraLifeUsed)
-                        });
-                    }
-                } 
-            };
-            const calculatePcScore = (timeSpent, mistakes, extraLifeUsed) => {
-                let score = 1000;
-                score -= timeSpent * 2; // Her saniye 2 puan azalt
-                score -= mistakes * 50; // Her hata 50 puan azalt
-                if (extraLifeUsed) score -= 100; // Ekstra hak kullanıldıysa 100 puan azalt
-                return Math.max(0, score);
-            };
-            const saveScoreRecord = (mode, details) => {
-                const scoreRecords = JSON.parse(localStorage.getItem('hangman_score_records') || '[]');
-                const record = {
-                    id: Date.now(),
-                    mode: mode,
-                    date: new Date().toLocaleString(state.currentLanguage),
-                    details: details
-                };
-                scoreRecords.unshift(record); // En yeni kayıt en üstte
-                localStorage.setItem('hangman_score_records', JSON.stringify(scoreRecords));
-            };
-            const loadScoreRecords = () => {
-                return JSON.parse(localStorage.getItem('hangman_score_records') || '[]');
-            };
-            const deleteScoreRecord = (id) => {
-                const scoreRecords = loadScoreRecords();
-                const updatedRecords = scoreRecords.filter(record => record.id !== id);
-                localStorage.setItem('hangman_score_records', JSON.stringify(updatedRecords));
+            scoreRecords.unshift(record);
+            localStorage.setItem('hangman_score_records', JSON.stringify(scoreRecords));
+        };
+        
+        const loadScoreRecords = () => {
+            return JSON.parse(localStorage.getItem('hangman_score_records') || '[]');
+        };
+        
+        const deleteScoreRecord = (id) => {
+            const scoreRecords = loadScoreRecords();
+            const updatedRecords = scoreRecords.filter(record => record.id !== id);
+            localStorage.setItem('hangman_score_records', JSON.stringify(updatedRecords));
+            showScoreHistory();
+        };
+        
+        const clearAllScoreRecords = () => {
+            if (confirm(getTranslation('clear_all_scores_btn') + '?')) {
+                localStorage.removeItem('hangman_score_records');
                 showScoreHistory();
-            };
-            const clearAllScoreRecords = () => {
-                if (confirm(getTranslation('clear_all_scores_btn') + '?')) {
-                    localStorage.removeItem('hangman_score_records');
-                    showScoreHistory();
-                }
-            };
+            }
+        };
+        
+        const calculateScoreSummary = (scoreRecords, mode) => {
+            const modeRecords = scoreRecords.filter(record => record.mode === mode);
             
-            const calculateScoreSummary = (scoreRecords, mode) => {
-                const modeRecords = scoreRecords.filter(record => record.mode === mode);
-                
-                if (modeRecords.length === 0) {
-                    return null;
-                }
-                
-                if (mode === 'pc') {
-                    const totalGames = modeRecords.length;
-                    const totalScore = modeRecords.reduce((sum, record) => sum + record.details.score, 0);
-                    const averageScore = Math.round(totalScore / totalGames);
-                    const bestScore = Math.max(...modeRecords.map(record => record.details.score));
-                    const wins = modeRecords.length; // PC modunda sadece kazanılan oyunlar kaydedilir
-                    
-                    return {
-                        totalGames,
-                        totalScore,
-                        averageScore,
-                        bestScore,
-                        wins,
-                        losses: 0
-                    };
-                } else if (mode === '2p') {
-                    const totalGames = modeRecords.length;
-                    const player1Wins = modeRecords.filter(record => record.details.winner === record.details.player1).length;
-                    const player2Wins = modeRecords.filter(record => record.details.winner === record.details.player2).length;
-                    const ties = modeRecords.filter(record => record.details.winner === 'Tie').length;
-                    
-                    return {
-                        totalGames,
-                        player1Wins,
-                        player2Wins,
-                        ties
-                    };
-                }
-                
+            if (modeRecords.length === 0) {
                 return null;
-            };
+            }
             
-            const showScoreSummary = (mode) => {
-                const scoreRecords = loadScoreRecords();
-                const summary = calculateScoreSummary(scoreRecords, mode);
+            if (mode === 'pc') {
+                const totalGames = modeRecords.length;
+                const totalScore = modeRecords.reduce((sum, record) => sum + record.details.score, 0);
+                const averageScore = Math.round(totalScore / totalGames);
+                const bestScore = Math.max(...modeRecords.map(record => record.details.score));
+                const wins = modeRecords.length;
                 
-                if (!summary) {
-                    dom.scoreSummary.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
-                    return;
-                }
+                return {
+                    totalGames,
+                    totalScore,
+                    averageScore,
+                    bestScore,
+                    wins,
+                    losses: 0
+                };
+            } else if (mode === '2p') {
+                const totalGames = modeRecords.length;
+                const player1Wins = modeRecords.filter(record => record.details.winner === record.details.player1).length;
+                const player2Wins = modeRecords.filter(record => record.details.winner === record.details.player2).length;
+                const ties = modeRecords.filter(record => record.details.winner === 'Tie').length;
                 
-                if (mode === 'pc') {
-                    dom.scoreSummary.innerHTML = `
-                        <h3>${getTranslation('score_summary_pc')}</h3>
-                        <div class="score-summary-stats">
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('total_games')}:</span>
-                                <span class="score-summary-value">${summary.totalGames}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('total_score')}:</span>
-                                <span class="score-summary-value">${summary.totalScore}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('average_score')}:</span>
-                                <span class="score-summary-value">${summary.averageScore}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('best_score')}:</span>
-                                <span class="score-summary-value">${summary.bestScore}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('wins')}:</span>
-                                <span class="score-summary-value">${summary.wins}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('losses')}:</span>
-                                <span class="score-summary-value">${summary.losses}</span>
-                            </div>
-                        </div>
-                    `;
-                } else if (mode === '2p') {
-                    dom.scoreSummary.innerHTML = `
-                        <h3>${getTranslation('score_summary_2p')}</h3>
-                        <div class="score-summary-stats">
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('total_games')}:</span>
-                                <span class="score-summary-value">${summary.totalGames}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('score_record_player1')} ${getTranslation('wins')}:</span>
-                                <span class="score-summary-value">${summary.player1Wins}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('score_record_player2')} ${getTranslation('wins')}:</span>
-                                <span class="score-summary-value">${summary.player2Wins}</span>
-                            </div>
-                            <div class="score-summary-stat">
-                                <span class="score-summary-label">${getTranslation('tie_game')}:</span>
-                                <span class="score-summary-value">${summary.ties}</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            };
+                return {
+                    totalGames,
+                    player1Wins,
+                    player2Wins,
+                    ties
+                };
+            }
             
-            const showScoreHistory = () => {
-                const scoreRecords = loadScoreRecords();
-                const filteredRecords = scoreRecords.filter(record => record.mode === state.currentScoreTab);
-                
-                dom.scoreHistoryContainer.innerHTML = '';
-                
-                if (filteredRecords.length === 0) {
-                    dom.scoreHistoryContainer.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
-                } else {
-                    filteredRecords.forEach(record => {
-                        const recordElement = document.createElement('div');
-                        recordElement.className = 'score-record';
-                        
-                        let detailsHtml = '';
-                        
-                        if (record.mode === 'pc') {
-                            detailsHtml = `
-                                <div class="score-record-details">
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_time')}:</span>
-                                        <span class="score-record-value">${record.details.time}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_mistakes')}:</span>
-                                        <span class="score-record-value">${record.details.mistakes}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_extra_life')}:</span>
-                                        <span class="score-record-value">${record.details.extraLifeUsed ? getTranslation('score_record_yes') : getTranslation('score_record_no')}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_word')}:</span>
-                                        <span class="score-record-value">${record.details.word}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_category')}:</span>
-                                        <span class="score-record-value">${record.details.category}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_score')}:</span>
-                                        <span class="score-record-value">${record.details.score}</span>
-                                    </div>
+            return null;
+        };
+        
+        const showScoreSummary = (mode) => {
+            const scoreRecords = loadScoreRecords();
+            const summary = calculateScoreSummary(scoreRecords, mode);
+            
+            if (!summary) {
+                dom.scoreSummary.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
+                return;
+            }
+            
+            if (mode === 'pc') {
+                dom.scoreSummary.innerHTML = `
+                    <h3>${getTranslation('score_summary_pc')}</h3>
+                    <div class="score-summary-stats">
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('total_games')}:</span>
+                            <span class="score-summary-value">${summary.totalGames}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('total_score')}:</span>
+                            <span class="score-summary-value">${summary.totalScore}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('average_score')}:</span>
+                            <span class="score-summary-value">${summary.averageScore}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('best_score')}:</span>
+                            <span class="score-summary-value">${summary.bestScore}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('wins')}:</span>
+                            <span class="score-summary-value">${summary.wins}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('losses')}:</span>
+                            <span class="score-summary-value">${summary.losses}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (mode === '2p') {
+                dom.scoreSummary.innerHTML = `
+                    <h3>${getTranslation('score_summary_2p')}</h3>
+                    <div class="score-summary-stats">
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('total_games')}:</span>
+                            <span class="score-summary-value">${summary.totalGames}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('score_record_player1')} ${getTranslation('wins')}:</span>
+                            <span class="score-summary-value">${summary.player1Wins}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('score_record_player2')} ${getTranslation('wins')}:</span>
+                            <span class="score-summary-value">${summary.player2Wins}</span>
+                        </div>
+                        <div class="score-summary-stat">
+                            <span class="score-summary-label">${getTranslation('tie_game')}:</span>
+                            <span class="score-summary-value">${summary.ties}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+        
+        const showScoreHistory = () => {
+            const scoreRecords = loadScoreRecords();
+            const filteredRecords = scoreRecords.filter(record => record.mode === state.currentScoreTab);
+            
+            dom.scoreHistoryContainer.innerHTML = '';
+            
+            if (filteredRecords.length === 0) {
+                dom.scoreHistoryContainer.innerHTML = `<div class="no-scores-message">${getTranslation('no_score_records')}</div>`;
+            } else {
+                filteredRecords.forEach(record => {
+                    const recordElement = document.createElement('div');
+                    recordElement.className = 'score-record';
+                    
+                    let detailsHtml = '';
+                    
+                    if (record.mode === 'pc') {
+                        detailsHtml = `
+                            <div class="score-record-details">
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_time')}:</span>
+                                    <span class="score-record-value">${record.details.time}</span>
                                 </div>
-                            `;
-                        } else if (record.mode === '2p') {
-                            detailsHtml = `
-                                <div class="score-record-details">
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_player1')}:</span>
-                                        <span class="score-record-value">${record.details.player1}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_player2')}:</span>
-                                        <span class="score-record-value">${record.details.player2}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('score_record_final_score')}:</span>
-                                        <span class="score-record-value">${record.details.finalScore}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('winner_is')}:</span>
-                                        <span class="score-record-value">${record.details.winner}</span>
-                                    </div>
-                                    <div class="score-record-detail">
-                                        <span class="score-record-label">${getTranslation('rounds_label')}:</span>
-                                        <span class="score-record-value">${record.details.rounds}</span>
-                                    </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_mistakes')}:</span>
+                                    <span class="score-record-value">${record.details.mistakes}</span>
                                 </div>
-                            `;
-                        }
-                        
-                        recordElement.innerHTML = `
-                            <div class="score-record-header">
-                                <div class="score-record-mode">${record.mode === 'pc' ? getTranslation('score_record_pc') : getTranslation('score_record_2p')}</div>
-                                <div class="score-record-date">${record.date}</div>
-                            </div>
-                            ${detailsHtml}
-                            <div class="score-record-actions">
-                                <button class="delete-score-btn" data-id="${record.id}">✕</button>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_extra_life')}:</span>
+                                    <span class="score-record-value">${record.details.extraLifeUsed ? getTranslation('score_record_yes') : getTranslation('score_record_no')}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_word')}:</span>
+                                    <span class="score-record-value">${record.details.word}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_category')}:</span>
+                                    <span class="score-record-value">${record.details.category}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_score')}:</span>
+                                    <span class="score-record-value">${record.details.score}</span>
+                                </div>
                             </div>
                         `;
-                        
-                        dom.scoreHistoryContainer.appendChild(recordElement);
-                    });
+                    } else if (record.mode === '2p') {
+                        detailsHtml = `
+                            <div class="score-record-details">
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_player1')}:</span>
+                                    <span class="score-record-value">${record.details.player1}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_player2')}:</span>
+                                    <span class="score-record-value">${record.details.player2}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('score_record_final_score')}:</span>
+                                    <span class="score-record-value">${record.details.finalScore}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('winner_is')}:</span>
+                                    <span class="score-record-value">${record.details.winner}</span>
+                                </div>
+                                <div class="score-record-detail">
+                                    <span class="score-record-label">${getTranslation('rounds_label')}:</span>
+                                    <span class="score-record-value">${record.details.rounds}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
                     
-                    // Silme butonlarına event listener ekle
-                    dom.scoreHistoryContainer.querySelectorAll('.delete-score-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            const id = parseInt(e.target.dataset.id);
-                            deleteScoreRecord(id);
-                        });
+                    recordElement.innerHTML = `
+                        <div class="score-record-header">
+                            <div class="score-record-mode">${record.mode === 'pc' ? getTranslation('score_record_pc') : getTranslation('score_record_2p')}</div>
+                            <div class="score-record-date">${record.date}</div>
+                        </div>
+                        ${detailsHtml}
+                        <div class="score-record-actions">
+                            <button class="delete-score-btn" data-id="${record.id}">✕</button>
+                        </div>
+                    `;
+                    
+                    dom.scoreHistoryContainer.appendChild(recordElement);
+                });
+                
+                dom.scoreHistoryContainer.querySelectorAll('.delete-score-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        deleteScoreRecord(id);
                     });
-                }
-                
-                // Özet bilgileri göster
-                showScoreSummary(state.currentScoreTab);
-                
-                // Modal'ı her durumda göster (skor olsun veya olmasın)
-                dom.scoreHistoryModal.classList.add('show');
-            };
+                });
+            }
             
-            const switchScoreTab = (tab) => {
-                // Tüm sekmeleri pasif yap
-                dom.scoreTabs.forEach(t => t.classList.remove('active'));
-                // Seçilen sekme aktif yap
-                const selectedTab = document.querySelector(`.score-tab[data-tab="${tab}"]`);
-                selectedTab.classList.add('active');
-                
-                // Sekme içeriğini güncelle
-                state.currentScoreTab = tab;
-                showScoreHistory();
-            };
+            showScoreSummary(state.currentScoreTab);
+            dom.scoreHistoryModal.classList.add('show');
+        };
+        
+        const switchScoreTab = (tab) => {
+            dom.scoreTabs.forEach(t => t.classList.remove('active'));
+            const selectedTab = document.querySelector(`.score-tab[data-tab="${tab}"]`);
+            selectedTab.classList.add('active');
             
-            const resetToMainMenu = () => {
-                stopTimer();
-                state.gamePhase = 'menu';
-                dom.gameContainer.removeAttribute('data-game-mode');
-                dom.gameStats.style.visibility = 'hidden';
-                showScreen(dom.modeSelectionScreen);
-            };
+            state.currentScoreTab = tab;
+            showScoreHistory();
+        };
+        
+        // YENİ: Geliştirilmiş ana menüye dönüş
+        const resetToMainMenu = () => {
+            stopTimer(); // Zamanlayıcıyı güvenli şekilde durdur
+            state.gamePhase = 'menu';
+            dom.gameContainer.removeAttribute('data-game-mode');
+            dom.gameStats.style.visibility = 'hidden';
+            dom.timerDisplay.style.display = 'none'; // Zamanlayıcıyı gizle
+            dom.timerLabel.style.display = 'none'; // Zaman etiketini gizle
+            showScreen(dom.modeSelectionScreen);
+        };
 
-            const init = () => {
-                dom.body.dataset.theme = state.currentTheme;
-                dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊';
+        const init = () => {
+            dom.body.dataset.theme = state.currentTheme;
+            dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊';
+            updateUIForLanguage();
+            populateLanguageMenu();
+            showScreen(dom.modeSelectionScreen);
+
+            dom.vsPcBtn.addEventListener('click', setupPcGame);
+            dom.twoPlayerBtn.addEventListener('click', () => { state.gameMode = '2p'; dom.playerNamesForm.reset(); showScreen(dom.playerNamesScreen); });
+            dom.playerNamesForm.addEventListener('submit', (e) => { e.preventDefault(); state.p1Name = dom.p1NameInput.value.trim() || getTranslation('player1_name_placeholder'); state.p2Name = dom.p2NameInput.value.trim() || getTranslation('player2_name_placeholder'); state.maxRounds = parseInt(dom.roundSelect.value, 10); state.p1Score = 0; state.p2Score = 0; state.currentRound = 0; state.roundHistory = []; state.gamePhase = 'playing'; dom.historyBtn.disabled = true; setupNewRound(); });
+            dom.wordSetupForm.addEventListener('submit', (e) => { e.preventDefault(); const word = dom.wordInput.value.trim(); let categoryText; if (dom.categorySelect.value === 'custom') { categoryText = dom.customCategoryInput.value.trim() || getTranslation('cat_custom'); } else if (dom.categorySelect.value) { categoryText = getTranslation(dom.categorySelect.value); } if (word && categoryText) { startGame(word, categoryText); } else { alert(getTranslation('alert_no_word_cat')); } });
+            dom.categorySelect.addEventListener('change', (e) => { dom.customCategoryInput.style.display = e.target.value === 'custom' ? 'block' : 'none'; });
+            dom.nextActionBtn.addEventListener('click', () => { dom.resultModal.classList.remove('show'); if(state.gameMode === 'pc') { setupPcGame(); } else { if (state.gamePhase === 'game-over') { dom.playerNamesForm.reset(); showScreen(dom.playerNamesScreen); } else if (state.currentRound === state.maxRounds) { endGame(); } else { setupNewRound(); } } });
+            dom.mainMenuBtn.addEventListener('click', () => { dom.resultModal.classList.remove('show'); resetToMainMenu(); });
+            dom.backToMenuBtn.addEventListener('click', resetToMainMenu);
+            dom.backToNamesBtn.addEventListener('click', () => showScreen(dom.playerNamesScreen));
+            dom.historyBtn.addEventListener('click', showHistoryModal);
+            dom.closeHistoryBtn.addEventListener('click', () => dom.historyModal.classList.remove('show'));
+            dom.themeToggleBtn.addEventListener('click', toggleTheme);
+            dom.soundToggleBtn.addEventListener('click', toggleSound);
+            dom.homeBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.add('show'); });
+            dom.confirmHomeYesBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.remove('show'); resetToMainMenu(); });
+            dom.confirmHomeNoBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.remove('show'); });
+            dom.restartBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.add('show'); });
+            dom.confirmRestartYesBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.remove('show'); setupPcGame(); });
+            dom.confirmRestartNoBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.remove('show'); });
+            dom.extraLifeBtn.addEventListener('click', () => { dom.extraLifeModal.classList.add('show'); });
+            dom.watchAdBtn.addEventListener('click', () => { 
+                dom.extraLifeModal.classList.remove('show'); 
+                const adWindow = window.open('reklamizlendi.html', '_blank'); 
+                setTimeout(() => { 
+                    if (adWindow) adWindow.close(); 
+                }, 3000); 
+                state.wrongGuesses--; 
+                state.extraLifeUsed = true;
+                updateMistakeCounter(); 
+                updateHangmanDrawing(); 
+                dom.extraLifeBtn.disabled = true; 
+                dom.extraLifeBtn.classList.remove('pulse-danger'); 
+            });
+            dom.continueGameBtn.addEventListener('click', () => { dom.extraLifeModal.classList.remove('show'); });
+            dom.langSelectBtn.addEventListener('click', () => dom.languageMenu.classList.toggle('show'));
+            dom.languageMenu.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'LI') return;
+                const newLang = e.target.dataset.lang;
+                if (newLang === state.currentLanguage) { dom.languageMenu.classList.remove('show'); return; }
+                state.currentLanguage = newLang;
+                localStorage.setItem('hangman_lang', newLang);
                 updateUIForLanguage();
                 populateLanguageMenu();
-                showScreen(dom.modeSelectionScreen);
-
-                dom.vsPcBtn.addEventListener('click', setupPcGame);
-                dom.twoPlayerBtn.addEventListener('click', () => { state.gameMode = '2p'; dom.playerNamesForm.reset(); showScreen(dom.playerNamesScreen); });
-                dom.playerNamesForm.addEventListener('submit', (e) => { e.preventDefault(); state.p1Name = dom.p1NameInput.value.trim() || getTranslation('player1_name_placeholder'); state.p2Name = dom.p2NameInput.value.trim() || getTranslation('player2_name_placeholder'); state.maxRounds = parseInt(dom.roundSelect.value, 10); state.p1Score = 0; state.p2Score = 0; state.currentRound = 0; state.roundHistory = []; state.gamePhase = 'playing'; dom.historyBtn.disabled = true; setupNewRound(); });
-                dom.wordSetupForm.addEventListener('submit', (e) => { e.preventDefault(); const word = dom.wordInput.value.trim(); let categoryText; if (dom.categorySelect.value === 'custom') { categoryText = dom.customCategoryInput.value.trim() || getTranslation('cat_custom'); } else if (dom.categorySelect.value) { categoryText = getTranslation(dom.categorySelect.value); } if (word && categoryText) { startGame(word, categoryText); } else { alert(getTranslation('alert_no_word_cat')); } });
-                dom.categorySelect.addEventListener('change', (e) => { dom.customCategoryInput.style.display = e.target.value === 'custom' ? 'block' : 'none'; });
-                dom.nextActionBtn.addEventListener('click', () => { dom.resultModal.classList.remove('show'); if(state.gameMode === 'pc') { setupPcGame(); } else { if (state.gamePhase === 'game-over') { dom.playerNamesForm.reset(); showScreen(dom.playerNamesScreen); } else if (state.currentRound === state.maxRounds) { endGame(); } else { setupNewRound(); } } });
-                dom.mainMenuBtn.addEventListener('click', () => { dom.resultModal.classList.remove('show'); resetToMainMenu(); });
-                dom.backToMenuBtn.addEventListener('click', resetToMainMenu);
-                dom.backToNamesBtn.addEventListener('click', () => showScreen(dom.playerNamesScreen));
-                dom.historyBtn.addEventListener('click', showHistoryModal);
-                dom.closeHistoryBtn.addEventListener('click', () => dom.historyModal.classList.remove('show'));
-                dom.themeToggleBtn.addEventListener('click', toggleTheme);
-                dom.soundToggleBtn.addEventListener('click', toggleSound);
-                dom.homeBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.add('show'); });
-                dom.confirmHomeYesBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.remove('show'); resetToMainMenu(); });
-                dom.confirmHomeNoBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.remove('show'); });
-                dom.restartBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.add('show'); });
-                dom.confirmRestartYesBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.remove('show'); setupPcGame(); });
-                dom.confirmRestartNoBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.remove('show'); });
-                dom.extraLifeBtn.addEventListener('click', () => { dom.extraLifeModal.classList.add('show'); });
-                dom.watchAdBtn.addEventListener('click', () => { 
-                    dom.extraLifeModal.classList.remove('show'); 
-                    const adWindow = window.open('reklamizlendi.html', '_blank'); 
-                    setTimeout(() => { 
-                        if (adWindow) adWindow.close(); 
-                    }, 3000); 
-                    state.wrongGuesses--; 
-                    state.extraLifeUsed = true;
-                    updateMistakeCounter(); 
-                    updateHangmanDrawing(); 
-                    dom.extraLifeBtn.disabled = true; 
-                    dom.extraLifeBtn.classList.remove('pulse-danger'); 
+                dom.languageMenu.classList.remove('show');
+            });
+            dom.scoreHistoryBtn.addEventListener('click', showScoreHistory);
+            dom.closeScoreHistoryBtn.addEventListener('click', () => dom.scoreHistoryModal.classList.remove('show'));
+            dom.clearAllScoresBtn.addEventListener('click', clearAllScoreRecords);
+            
+            dom.scoreTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    switchScoreTab(tabName);
                 });
-                dom.continueGameBtn.addEventListener('click', () => { dom.extraLifeModal.classList.remove('show'); });
-                dom.langSelectBtn.addEventListener('click', () => dom.languageMenu.classList.toggle('show'));
-                dom.languageMenu.addEventListener('click', (e) => {
-                    if (e.target.tagName !== 'LI') return;
-                    const newLang = e.target.dataset.lang;
-                    if (newLang === state.currentLanguage) { dom.languageMenu.classList.remove('show'); return; }
-                    state.currentLanguage = newLang;
-                    localStorage.setItem('hangman_lang', newLang);
-                    updateUIForLanguage();
-                    populateLanguageMenu();
-                    dom.languageMenu.classList.remove('show');
-                });
-                dom.scoreHistoryBtn.addEventListener('click', showScoreHistory);
-                dom.closeScoreHistoryBtn.addEventListener('click', () => dom.scoreHistoryModal.classList.remove('show'));
-                dom.clearAllScoresBtn.addEventListener('click', clearAllScoreRecords);
-                
-                // Sekme değiştirme event listener'ları
-                dom.scoreTabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        const tabName = tab.getAttribute('data-tab');
-                        switchScoreTab(tabName);
-                    });
-                });
-            };
-            init();
-        })();
-    </script>
+            });
+        };
+        init();
+    })();
+</script>
 </body>
 </html>
