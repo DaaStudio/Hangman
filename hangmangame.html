@@ -8,7 +8,2514 @@
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
         :root {
+            /* Dark Theme (Default) */<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adam Asmaca | Hangman</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
             /* Dark Theme (Default) */
+            --bg-gradient: linear-gradient(135deg, #232526 0%, #414345 100%);
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --disabled-color: rgba(255, 255, 255, 0.3);
+            --glass-bg: rgba(35, 35, 45, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --shadow-color: rgba(0,0,0,0.3);
+            --accent-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --error-color: #ff6b6b;
+            --success-color: #45f5a3;
+            --option-bg: #3a3f47;
+            --border-radius-main: 24px;
+            --border-radius-small: 16px;
+            --letterbox-border: var(--glass-border);
+            --letterbox-glow: 0 0 12px rgba(255, 255, 255, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --text-color: #334155;
+            --primary-color: #0f172a;
+            --disabled-color: rgba(0, 0, 0, 0.3);
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow-color: rgba(0,0,0,0.1);
+            --accent-gradient: linear-gradient(135deg, #0077ff 0%, #00e5ff 100%);
+            --error-color: #d90429;
+            --success-color: #008000;
+            --option-bg: #ffffff;
+            --letterbox-border: rgba(15, 23, 42, 0.3);
+            --letterbox-glow: 0 0 12px rgba(0, 119, 255, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            transition: background-image 0.5s ease;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            border-radius: var(--border-radius-main);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 var(--shadow-color);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+
+        .game-header-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            width: 100%; 
+            padding-bottom: 1rem; 
+            min-height: 45px; 
+        }
+        .header-left, .header-center, .header-right { 
+            display: flex; 
+            gap: 10px; 
+            align-items: center; 
+            flex-wrap: wrap;
+        }
+        .header-center { 
+            flex-grow: 1; 
+            justify-content: center; 
+        }
+        .header-right { 
+            justify-content: flex-end; 
+        }
+        .game-stats { 
+            display: flex; 
+            gap: 15px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            color: var(--primary-color); 
+            background: var(--glass-bg); 
+            padding: 8px 15px; 
+            border-radius: var(--border-radius-small); 
+            border: 1px solid var(--glass-border); 
+            flex-shrink: 0; 
+        }
+        .control-btn { 
+            background: var(--glass-bg); 
+            border: 1px solid var(--glass-border); 
+            cursor: pointer; 
+            width: 45px; 
+            height: 45px; 
+            border-radius: var(--border-radius-small); 
+            font-size: 1.2rem; 
+            line-height: 1; 
+            color: var(--text-color); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            transition: all 0.2s ease-in-out; 
+            font-weight: 700; 
+            padding: 0; 
+            flex-shrink: 0;
+        }
+        .control-btn:hover:not(:disabled) { background-image: var(--accent-gradient); color: white; transform: scale(1.1); }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; background-image: none; background: var(--glass-bg); }
+        .language-menu { position: absolute; top: 55px; background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); -webkit-backup-filter: blur(10px); border-radius: var(--border-radius-small); list-style: none; max-height: 250px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 20px var(--shadow-color); display: none; }
+        .language-menu.show { display: block; }
+        .language-menu li { padding: 12px 18px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; transition: all 0.2s ease; }
+        .language-menu li:hover { background: var(--glass-border); }
+        .language-menu li.active { font-weight: 600; color: var(--success-color); }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 4px var(--error-color); } 50% { box-shadow: 0 0 16px var(--error-color); } 100% { box-shadow: 0 0 4px var(--error-color); } }
+        .control-btn.pulse-danger { animation: pulse-red 1.5s infinite; transform: scale(1.1); border-color: var(--error-color); }
+        .screen-wrapper { flex-grow: 1; width: 100%; }
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; width: 100%; }
+        .screen.active { display: flex; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        h1, h2 { color: var(--primary-color); text-align: center; font-weight: 700; text-shadow: 0 2px 4px var(--shadow-color); }
+        #scoreboard { width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; padding: 0.5rem 0.25rem; border-bottom: 2px solid var(--glass-border); margin-bottom: 1rem; box-shadow: none; }
+        .score-display { font-size: 1.1rem; font-weight: 600; color: var(--text-color); transition: transform 0.3s ease, color 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .score-display.active-turn { transform: scale(1.05); color: var(--success-color); }
+        button { font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 600; padding: 0.9rem 1.5rem; border-radius: var(--border-radius-small); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-color); cursor: pointer; width: 100%; transition: all 0.2s ease-in-out; }
+        button.btn-primary { background-image: var(--accent-gradient); color: white; border: none; }
+        button.btn-primary:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); box-shadow: 0 4px 15px var(--shadow-color); }
+        .setup-form, .mode-buttons { display: flex; flex-direction: column; gap: 1.25rem; width: 100%; max-width: 350px; }
+        input, select { width: 100%; padding: 1rem; background: transparent; border: 1px solid var(--glass-border); border-radius: var(--border-radius-small); color: var(--primary-color); font-size: 1rem; font-family: 'Poppins', sans-serif; }
+        select option { background: var(--option-bg); color: var(--text-color); }
+		.hangman-svg {
+			height: 260px;
+			width: 240px;
+			stroke: var(--primary-color);
+			stroke-width: 3;
+			stroke-linecap: round;
+			filter: drop-shadow(0 2px 3px var(--shadow-color));
+		}
+		.hangman-part { visibility: hidden; }
+		
+        .word-display { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; width: 100%; }
+        .word-line { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+        .letter-placeholder {
+            width: var(--letter-box-size, 40px);
+            height: calc(var(--letter-box-size, 40px) * 1.25);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: calc(var(--letter-box-size, 40px) * 0.5);
+            font-weight: 700;
+            color: var(--primary-color);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-bottom: 3px solid var(--letterbox-border);
+            box-shadow: var(--letterbox-glow);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .keyboard { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(38px, 1fr)); 
+            gap: 0.5rem; 
+            width: 100%; 
+        }
+        .keyboard button { 
+            padding: 0; 
+            width: 100%; 
+            height: 48px; 
+            font-size: 1.2rem; 
+            min-width: 0;
+        }
+        .keyboard button:disabled { background-image: var(--accent-gradient); color: white; opacity: 0.5; }
+        .modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-container.show { display: flex; animation: fadeIn 0.3s; }
+        .modal-content { 
+            background: var(--glass-bg); 
+            padding: 2.5rem; 
+            border-radius: var(--border-radius-main); 
+            text-align: center; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.5rem; 
+            width: 90%; 
+            max-width: 450px; 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 8px 32px 0 var(--shadow-color); 
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .game-header-bar {
+            min-height: auto;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1rem;
+        }
+        
+        .game-container:not([data-game-mode]) .game-header-bar {
+            border-bottom: none;
+            margin-bottom: 1rem;
+            justify-content: space-between;
+        }
+        .game-container:not([data-game-mode]) .header-center,
+        .game-container:not([data-game-mode]) #game-stats,
+        .game-container:not([data-game-mode]) #extra-life-btn,
+        .game-container:not([data-game-mode]) #restart-btn,
+        .game-container:not([data-game-mode]) #home-btn,
+        .game-container:not([data-game-mode]) #history-btn {
+            display: none;
+        }
+        
+        .game-container[data-game-mode="2p"] .game-header-bar {
+            display: grid;
+            grid-template-areas:
+                "left right"
+                "stats stats";
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 1.25rem;
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .game-container[data-game-mode="2p"] .header-left {
+            grid-area: left;
+            justify-self: start;
+        }
+        .game-container[data-game-mode="2p"] .header-right {
+            grid-area: right;
+            justify-self: end;
+        }
+        .game-container[data-game-mode="2p"] #game-stats {
+            grid-area: stats;
+            justify-self: center;
+        }
+        .game-container[data-game-mode="2p"] .header-center { display: none; }
+        .game-container[data-game-mode="2p"] #scoreboard {
+            padding-top: 1.25rem;
+            margin-top: -1rem;
+        }
+        
+        .game-container[data-game-mode="pc"] .game-header-bar {
+            display: grid;
+            grid-template-areas:
+                "left stats right";
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+        }
+        .game-container[data-game-mode="pc"] .header-left { grid-area: left; justify-content: flex-start; }
+        .game-container[data-game-mode="pc"] .header-center { display: none; }
+        .game-container[data-game-mode="pc"] #game-stats { grid-area: stats; }
+        .game-container[data-game-mode="pc"] .header-right { grid-area: right; justify-content: flex-end; }
+        
+        #restart-btn, #home-btn, #history-btn, #extra-life-btn, #lang-btn-wrapper {
+            display: none;
+        }
+        .game-container:not([data-game-mode]) #lang-btn-wrapper { display: block; }
+        .game-container[data-game-mode] #home-btn { display: flex; }
+        .game-container[data-game-mode="2p"] #history-btn { display: flex; }
+        .game-container[data-game-mode="pc"] #restart-btn { display: flex; }
+        .game-container[data-game-mode="pc"] #extra-life-btn { display: flex; }
+        
+        /* 📊 butonu her zaman görünür */
+        #score-history-btn { display: flex !important; }
+        
+        /* YENİ: Kategori ve bilgi alanı düzeni - İKİ SIRA */
+        .hangman-box {
+             display: flex;
+				flex-direction: column;
+				align-items: center;
+				width: 100%;
+				margin: 1rem 0;
+				min-height: 250px; /* Minimum yükseklik eklendi */
+        }
+        
+        .game-info-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            width: 100%;
+        }
+        
+        .info-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-small);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-align: center;
+            flex: 1;
+            min-width: 0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hangman-drawing {
+           flex-shrink: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+        }
+        
+        .hangman-svg {
+            height: 220px;
+			width: 180px;
+			max-width: 100%; /* Maksimum genişlik eklendi */
+        }
+        
+        #extra-life-btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            height: auto;
+            width: auto;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* YENİ: Gelişmiş skor geçmişi stilleri */
+        .history-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .history-round {
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+        }
+        
+        .history-round:last-child {
+            border-bottom: none;
+        }
+        
+        .delete-history-btn {
+            background: var(--error-color);
+            color: white;
+            border: none;
+        }
+        
+        .delete-history-btn:hover {
+            background: #d90429;
+            transform: translateY(-2px);
+        }
+
+        /* YENİ: Gelişmiş skor geçmişi modal stilleri */
+        .history-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
+        
+        .history-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: var(--border-radius-small);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .history-tab.active {
+            background-image: var(--accent-gradient);
+            color: white;
+        }
+        
+        .history-content {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .history-section {
+            display: none;
+        }
+        
+        .history-section.active {
+            display: block;
+        }
+        
+        .average-score {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-small);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+        
+        .delete-single-btn {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: var(--border-radius-small);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+        }
+        
+        .delete-single-btn:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .winners-list {
+            margin-top: 1rem;
+        }
+        
+        .winner-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-small);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .winner-name {
+            font-weight: 600;
+            color: var(--success-color);
+        }
+        
+        .winner-stats {
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        /* YENİ: Onay modalı stilleri */
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        
+        .confirm-modal-buttons button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Responsive tasarım */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1rem;
+                max-width: 100%;
+                margin: 0.5rem;
+            }
+            
+            .game-header-bar {
+                gap: 8px;
+                padding-bottom: 0.75rem;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .game-info-container {
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+            
+            .info-row {
+                gap: 0.75rem;
+            }
+            
+            .info-item {
+                font-size: 0.8rem;
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .hangman-box {
+				min-height: 200px; /* Daha küçük ekranlar için */
+			}
+			.hangman-svg {
+				height: 220px;
+				width: 200px;
+			}
+            
+            #extra-life-btn {
+                font-size: 0.8rem;
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .word-line {
+                gap: 0.4rem;
+            }
+            
+            .letter-placeholder {
+                width: var(--letter-box-size, 36px); /* ESKİ: 32px */
+				height: calc(var(--letter-box-size, 36px) * 1.25);
+				font-size: calc(var(--letter-box-size, 36px) * 0.5);
+            }
+            
+            .keyboard {
+                grid-template-columns: repeat(auto-fit, minmax(32px, 1fr));
+                gap: 0.4rem;
+            }
+            
+            .keyboard button {
+                height: 42px;
+                font-size: 1rem;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .history-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .history-tabs {
+                flex-direction: column;
+            }
+            
+            .history-content {
+                max-height: 300px;
+            }
+            
+            .confirm-modal-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 0.75rem;
+                margin: 0.25rem;
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+            
+            .game-info-container {
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .info-row {
+                gap: 0.5rem;
+            }
+            
+            .info-item {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.6rem;
+            }
+            
+            .hangman-box {
+				min-height: 170px;
+			}
+			.hangman-svg {
+				height: 180px;
+				width: 160px;
+			}
+            
+            #extra-life-btn {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.6rem;
+            }
+            
+            .word-line {
+                gap: 0.3rem;
+            }
+            
+            .letter-placeholder {
+                width: var(--letter-box-size, 32px); /* ESKİ: 28px */
+				height: calc(var(--letter-box-size, 32px) * 1.25);
+				font-size: calc(var(--letter-box-size, 32px) * 0.5);
+            }
+            
+            .keyboard {
+                grid-template-columns: repeat(auto-fit, minmax(28px, 1fr));
+                gap: 0.3rem;
+            }
+            
+            .keyboard button {
+                height: 38px;
+                font-size: 0.9rem;
+            }
+            
+            .modal-content {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            h2 {
+                font-size: 1.25rem;
+            }
+            
+            button {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            /* DÜZELTME: 480px altında hangman-box görünürlüğü */
+            .hangman-box {
+                display: flex !important;
+                margin: 0.5rem 0;
+            }
+            
+            .game-info-container {
+                display: flex !important;
+            }
+        }
+        
+        /* Çok küçük ekranlar için ek iyileştirmeler */
+        @media (max-width: 360px) {
+            .game-info-container {
+                gap: 0.4rem;
+            }
+            
+            .info-row {
+                gap: 0.4rem;
+            }
+            
+            .info-item {
+                font-size: 0.7rem;
+                padding: 0.4rem 0.5rem;
+            }
+            
+            .hangman-box {
+				min-height: 150px;
+			}
+			.hangman-svg {
+				height: 130px;
+				width: 100px;
+			}
+            
+            #extra-life-btn {
+                font-size: 0.7rem;
+                padding: 0.4rem 0.5rem;
+            }
+            
+            .word-line {
+                gap: 0.2rem;
+            }
+            
+            .letter-placeholder {
+                 width: var(--letter-box-size, 28px); /* ESKİ: 24px */
+				height: calc(var(--letter-box-size, 28px) * 1.25);
+				font-size: calc(var(--letter-box-size, 28px) * 0.5);
+            }
+            
+            .keyboard {
+                grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
+                gap: 0.2rem;
+            }
+            
+            .keyboard button {
+                height: 34px;
+                font-size: 0.8rem;
+            }
+            
+            /* DÜZELTME: 360px altında ekstra güvenlik */
+            .hangman-box {
+                display: flex !important;
+            }
+        }
+        
+        /* Yatay mod için iyileştirmeler */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .game-container {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            .game-info-container {
+                margin-bottom: 1rem;
+            }
+            
+            .hangman-svg {
+                height: 160px;
+				width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header-bar">
+            <div class="header-left">
+                <div style="position: relative;" id="lang-btn-wrapper">
+                    <button class="control-btn" id="lang-select-btn" aria-label="Dil Değiştir">🌐</button>
+                    <ul class="language-menu" id="language-menu"></ul>
+                </div>
+                <button class="control-btn" id="score-history-btn" aria-label="Skor Geçmişi">📊</button>
+                <button class="control-btn" id="restart-btn" aria-label="Yeniden Başlat">🔄</button>
+                <button class="control-btn" id="home-btn" aria-label="Ana Menü">🏠</button>
+                <button class="control-btn" id="history-btn" aria-label="Skor Geçmişi">🏆</button>
+            </div>
+            <div class="header-center"></div>
+            <div class="header-right">
+                <button class="control-btn" id="theme-toggle-btn" aria-label="Tema Değiştir">🎨</button>
+                <button class="control-btn" id="sound-toggle-btn" aria-label="Ses Değiştir">🔊</button>
+            </div>
+        </div>
+		
+        <div class="screen-wrapper"> 
+            <div id="mode-selection-screen" class="screen active">
+                <h1 data-key="game_title">Adam Asmaca</h1>
+                <div class="mode-buttons">
+                    <button id="vs-pc-btn" data-key="vs_pc">PC'ye Karşı</button>
+                    <button id="two-player-btn" data-key="two_player">2 Kişilik Mod</button>
+                </div>
+            </div>
+            <div id="player-names-screen" class="screen">
+                 <h2 data-key="setup_tournament_title">Turnuva Ayarları</h2> 
+                 <form id="player-names-form" class="setup-form"> 
+                     <div class="form-group"> 
+                         <input type="text" id="player1-name-input" data-key-placeholder="player1_name_placeholder" required> 
+                     </div> 
+                     <div class="form-group"> 
+                         <input type="text" id="player2-name-input" data-key-placeholder="player2_name_placeholder" required> 
+                     </div> 
+                     <div class="form-group"> 
+                         <label for="round-select" data-key="rounds_label">Raund Sayısı:</label> 
+                         <select id="round-select"> 
+                             <option value="2" data-key="rounds_2">2 Raund</option> 
+                             <option value="4" data-key="rounds_4">4 Raund</option> 
+                             <option value="6" selected data-key="rounds_6">6 Raund</option> 
+                             <option value="8" data-key="rounds_8">8 Raund</option> 
+                             <option value="10" data-key="rounds_10">10 Raund</option> 
+                         </select> 
+                     </div> 
+                     <button type="submit" class="btn-primary" data-key="start_tournament_btn">Turnuvayı Başlat</button> 
+                     <button type="button" id="back-to-menu-btn" class="btn-secondary" data-key="back_btn">Geri Dön</button> 
+                 </form>
+            </div>
+            <div id="word-setup-screen" class="screen">
+                 <h2 id="word-setup-title"></h2> 
+                 <form id="word-setup-form" class="setup-form"> 
+                     <select id="category-select" required> 
+                         <option value="" disabled selected data-key="select_category">Kategori Seçin</option> 
+                         <option value="cat_celebrity" data-key="cat_celebrity">Ünlü İsmi</option> 
+                         <option value="cat_city" data-key="cat_city">Şehir</option> 
+                         <option value="cat_country" data-key="cat_country">Ülke</option> 
+                         <option value="cat_animal" data-key="cat_animal">Hayvan</option> 
+                         <option value="cat_movie" data-key="cat_movie">Film Adı</option> 
+                         <option value="custom" data-key="cat_custom">Diğer...</option> 
+                     </select> 
+                     <input type="text" id="custom-category-input" data-key-placeholder="custom_category_placeholder"> 
+                     <input type="password" id="word-input" data-key-placeholder="word_input_placeholder" required> 
+                     <button type="submit" class="btn-primary" data-key="start_round_btn">Raundu Başlat</button> 
+                     <button type="button" id="back-to-names-btn" class="btn-secondary" data-key="back_to_settings_btn">Ayarlara Geri Dön</button> 
+                 </form>
+            </div>
+            <div id="game-screen" class="screen">
+				<div id="scoreboard"></div>
+				
+				<!-- YENİ: Kategori ve bilgi alanı hangman-box içinde - İKİ SIRA -->
+				<div class="hangman-box">
+                    <div class="game-info-container">
+                        <!-- İlk satır: Kategori ve Hata Sayısı -->
+                        <div class="info-row">
+                            <div class="info-item" id="category-display-game">Kategori: -</div>
+                            <div class="info-item" id="mistake-counter" data-key="mistakes_label">Hata: 0/6</div>
+                        </div>
+                        
+                        <!-- İkinci satır: Süre ve Can -->
+                        <div class="info-row">
+                            <div class="info-item" id="timer-display">
+                                <span id="timer-label" data-key="time_label">Süre:</span>
+                                <span id="timer">00:00</span>
+                            </div>
+                            <button class="control-btn" id="extra-life-btn" aria-label="Ekstra Hak" style="display: none;">+1 ❤️</button>
+                        </div>
+                    </div>
+                    
+                    <div class="hangman-drawing">
+						<svg viewBox="0 0 200 200" class="hangman-svg">
+							<line x1="30" y1="10" x2="100" y2="10"/>
+							<line x1="100" y1="10" x2="100" y2="35"/>
+							<line x1="30" y1="10" x2="30" y2="175"/>
+							<line x1="5" y1="175" x2="55" y2="175"/>
+							<circle cx="100" cy="50" r="15" class="hangman-part"/>
+							<line x1="100" y1="65" x2="100" y2="105" class="hangman-part"/>
+							<line x1="100" y1="80" x2="80" y2="70" class="hangman-part"/>
+							<line x1="100" y1="80" x2="120" y2="70" class="hangman-part"/>
+							<line x1="100" y1="105" x2="80" y2="125" class="hangman-part"/>
+							<line x1="100" y1="105" x2="120" y2="125" class="hangman-part"/>
+						</svg>
+					</div>
+                </div>
+				
+				<div id="word-display" class="word-display"></div>
+				<div id="keyboard" class="keyboard"></div>
+				<p id="player-prompt"></p>
+			</div>
+        </div>
+    </div>
+    
+    <div id="result-modal" class="modal-container"> 
+        <div class="modal-content"> 
+            <h2 id="result-message"></h2> 
+            <p id="correct-word-display"></p> 
+            <div class="modal-buttons"> 
+                <button id="next-action-btn"></button> 
+                <button id="main-menu-btn" data-key="main_menu_btn">Ana Menü</button> 
+            </div> 
+        </div> 
+    </div> 
+    
+    <!-- YENİ: Gelişmiş Skor Geçmişi Modalı -->
+    <div id="history-modal" class="modal-container"> 
+        <div class="modal-content"> 
+            <h2 id="history-title" data-key="score_history_title">Skor Geçmişi</h2> 
+            
+            <!-- History Modal içinde çevrilebilir metinler -->
+			<div class="history-tabs">
+				<button class="history-tab active" data-tab="pc" data-key="pc_mode_stats">PC Modu</button>
+				<button class="history-tab" data-tab="2p" data-key="two_player_stats">2 Kişilik Mod</button>
+			</div>
+            
+            <div class="history-content">
+                <!-- PC Modu İçeriği -->
+                <div class="history-section active" id="pc-history">
+                    <div class="average-score" id="pc-average-score">
+                        Başarı Ortalaması: Hesaplanıyor...
+                    </div>
+                    <div id="pc-history-details"></div>
+                </div>
+                
+                <!-- 2 Kişilik Mod İçeriği -->
+                <div class="history-section" id="2p-history">
+                    <div class="winners-list" id="winners-list">
+                        <h3>Kazananlar</h3>
+                    </div>
+                    <div id="2p-history-details"></div>
+                </div>
+            </div>
+            
+            <div class="history-actions">
+                <button id="clear-history-btn" class="btn-primary delete-history-btn" data-key="clear_history_btn">Tüm Geçmişi Temizle</button>
+                <button id="close-history-btn" data-key="close_btn">Kapat</button> 
+            </div>
+        </div> 
+    </div> 
+    
+    <!-- YENİ: Onay Modalı -->
+    <div id="confirm-delete-modal" class="modal-container"> 
+        <div class="modal-content"> 
+            <h2 id="confirm-delete-title" data-key="confirm_delete_title">Kaydı Sil?</h2> 
+            <p id="confirm-delete-desc" data-key="confirm_delete_desc">Bu kayıt kalıcı olarak silinecek. Emin misiniz?</p> 
+            <div class="confirm-modal-buttons"> 
+                <button id="confirm-delete-yes-btn" class="btn-primary" data-key="yes_btn">Evet, Sil</button> 
+                <button id="confirm-delete-no-btn" class="btn-secondary" data-key="no_btn">Hayır, İptal</button> 
+            </div> 
+        </div> 
+    </div>
+    
+    <div id="extra-life-modal" class="modal-container"> 
+        <div class="modal-content"> 
+            <h2 data-key="extra_life_title">+1 Ekstra Hak Kazan</h2> 
+            <p data-key="extra_life_desc">Kısa bir reklam izleyerek bir şans daha elde edebilirsin.</p> 
+            <div class="modal-buttons"> 
+                <button id="watch-ad-btn" class="btn-primary" data-key="watch_ad_btn">Reklam İzle</button> 
+                <button id="continue-game-btn" class="btn-secondary" data-key="no_thanks_btn">İstemiyorum</button> 
+            </div> 
+        </div> 
+    </div> 
+    
+    <div id="confirm-home-modal" class="modal-container"> 
+        <div class="modal-content"> 
+            <h2 data-key="confirm_home_title">Ana Menüye Dön?</h2> 
+            <p data-key="confirm_home_desc">Mevcut oyun ilerlemeniz kaybolacak. Emin misiniz?</p> 
+            <div class="modal-buttons"> 
+                <button id="confirm-home-yes-btn" class="btn-primary" data-key="yes_btn">Evet, Dön</button> 
+                <button id="confirm-home-no-btn" class="btn-secondary" data-key="no_btn">Hayır, Kal</button> 
+            </div> 
+        </div> 
+    </div> 
+    
+    <div id="confirm-restart-modal" class="modal-container"> 
+        <div class="modal-content"> 
+            <h2 data-key="confirm_restart_title">Oyunu Yeniden Başlat?</h2> 
+            <p data-key="confirm_restart_desc">Mevcut kelime iptal edilecek ve yeni bir kelime sorulacak.</p> 
+            <div class="modal-buttons"> 
+                <button id="confirm-restart-yes-btn" class="btn-primary" data-key="yes_restart_btn">Evet, Yeniden Başlat</button> 
+                <button id="confirm-restart-no-btn" class="btn-secondary" data-key="no_cancel_btn">Hayır, Vazgeç</button> 
+            </div> 
+        </div> 
+    </div>
+
+    <script>
+    (() => {
+        const dom = {
+            gameContainer: document.querySelector('.game-container'),
+            body: document.body, 
+            screens: document.querySelectorAll('.screen'), 
+            modeSelectionScreen: document.getElementById('mode-selection-screen'),
+            playerNamesScreen: document.getElementById('player-names-screen'), 
+            playerNamesForm: document.getElementById('player-names-form'),
+            p1NameInput: document.getElementById('player1-name-input'), 
+            p2NameInput: document.getElementById('player2-name-input'),
+            roundSelect: document.getElementById('round-select'),
+            wordSetupScreen: document.getElementById('word-setup-screen'), 
+            wordSetupTitle: document.getElementById('word-setup-title'),
+            wordSetupForm: document.getElementById('word-setup-form'), 
+            categorySelect: document.getElementById('category-select'),
+            customCategoryInput: document.getElementById('custom-category-input'), 
+            wordInput: document.getElementById('word-input'),
+            gameScreen: document.getElementById('game-screen'), 
+            scoreboard: document.getElementById('scoreboard'),
+            wordDisplay: document.getElementById('word-display'), 
+            keyboardContainer: document.getElementById('keyboard'),
+            hangmanParts: document.querySelectorAll('.hangman-part'), 
+            playerPrompt: document.getElementById('player-prompt'),
+            resultModal: document.getElementById('result-modal'), 
+            resultMessage: document.getElementById('result-message'),
+            correctWordDisplay: document.getElementById('correct-word-display'), 
+            nextActionBtn: document.getElementById('next-action-btn'),
+            mainMenuBtn: document.getElementById('main-menu-btn'), 
+            themeToggleBtn: document.getElementById('theme-toggle-btn'),
+            soundToggleBtn: document.getElementById('sound-toggle-btn'), 
+            gameStats: document.getElementById('game-stats'),
+            mistakeDisplay: document.getElementById('mistake-counter'), 
+            vsPcBtn: document.getElementById('vs-pc-btn'),
+            twoPlayerBtn: document.getElementById('two-player-btn'), 
+            historyBtn: document.getElementById('history-btn'),
+            historyModal: document.getElementById('history-modal'), 
+            historyDetails: document.getElementById('history-details'),
+            closeHistoryBtn: document.getElementById('close-history-btn'), 
+            clearHistoryBtn: document.getElementById('clear-history-btn'),
+            backToMenuBtn: document.getElementById('back-to-menu-btn'),
+            extraLifeBtn: document.getElementById('extra-life-btn'), 
+            extraLifeModal: document.getElementById('extra-life-modal'),
+            watchAdBtn: document.getElementById('watch-ad-btn'), 
+            continueGameBtn: document.getElementById('continue-game-btn'),
+            categoryDisplayGame: document.getElementById('category-display-game'),
+            timerDisplay: document.getElementById('timer'),
+            timerLabel: document.getElementById('timer-label'),
+            homeBtn: document.getElementById('home-btn'),
+            confirmHomeModal: document.getElementById('confirm-home-modal'),
+            confirmHomeYesBtn: document.getElementById('confirm-home-yes-btn'),
+            confirmHomeNoBtn: document.getElementById('confirm-home-no-btn'),
+            restartBtn: document.getElementById('restart-btn'),
+            confirmRestartModal: document.getElementById('confirm-restart-modal'),
+            confirmRestartYesBtn: document.getElementById('confirm-restart-yes-btn'),
+            confirmRestartNoBtn: document.getElementById('confirm-restart-no-btn'),
+            backToNamesBtn: document.getElementById('back-to-names-btn'),
+            langSelectBtn: document.getElementById('lang-select-btn'),
+            languageMenu: document.getElementById('language-menu'),
+            langBtnWrapper: document.getElementById('lang-btn-wrapper'),
+            scoreHistoryBtn: document.getElementById('score-history-btn'),
+            // YENİ: Gelişmiş skor geçmişi elementleri
+            historyTabs: document.querySelectorAll('.history-tab'),
+            pcHistorySection: document.getElementById('pc-history'),
+            twoPHistorySection: document.getElementById('2p-history'),
+            pcHistoryDetails: document.getElementById('pc-history-details'),
+            twoPHistoryDetails: document.getElementById('2p-history-details'),
+            pcAverageScore: document.getElementById('pc-average-score'),
+            winnersList: document.getElementById('winners-list'),
+            // YENİ: Onay modalı elementleri
+            confirmDeleteModal: document.getElementById('confirm-delete-modal'),
+            confirmDeleteTitle: document.getElementById('confirm-delete-title'),
+            confirmDeleteDesc: document.getElementById('confirm-delete-desc'),
+            confirmDeleteYesBtn: document.getElementById('confirm-delete-yes-btn'),
+            confirmDeleteNoBtn: document.getElementById('confirm-delete-no-btn')
+        };
+
+        let state = {
+            gameMode: '', 
+            secretWord: '', 
+            currentCategoryText: '', 
+            guessedLetters: [], 
+            wrongGuesses: 0, 
+            maxWrongGuesses: 6,
+            isMuted: localStorage.getItem('hangman_isMuted') === 'true', 
+            currentTheme: localStorage.getItem('hangman_theme') || 'dark',
+            currentLanguage: localStorage.getItem('hangman_lang') || 'en',
+            p1Name: '', 
+            p2Name: '', 
+            p1Score: 0, 
+            p2Score: 0, 
+            currentRound: 0, 
+            maxRounds: 6, 
+            currentPlayerSetter: null, 
+            currentPlayerGuesser: null,
+            timerInterval: null, 
+            seconds: 0, 
+            roundHistory: JSON.parse(localStorage.getItem('hangman_score_history')) || [],
+            gamePhase: 'menu',
+            pcGameStartTime: null,
+            extraLifeUsed: false,
+            // YENİ: Silme işlemi için geçici state
+            pendingDeleteId: null,
+            pendingDeleteType: null
+        };
+
+        const data = {
+            languages: { 
+                'tr': 'Türkçe 🇹🇷', 
+                'en': 'English 🇬🇧/🇺🇸', 
+                'es': 'Español 🇪🇸', 
+                'de': 'Deutsch 🇩🇪', 
+                'fr': 'Français 🇫🇷',
+                'it': 'Italiano 🇮🇹',
+                'pt': 'Português 🇵🇹',
+                'ru': 'Русский 🇷🇺',
+                'ar': 'العربية 🇸🇦',
+                'zh': '中文 🇨🇳',
+                'ja': '日本語 🇯🇵',
+                'ko': '한국어 🇰🇷'
+            },
+            alphabets: { 
+                tr: 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ', 
+                en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 
+                es: 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ', 
+                de: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ', 
+                fr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                it: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                pt: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                ru: 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+                ar: 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي',
+                zh: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                ja: 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン',
+                ko: 'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ'
+            },
+            languageStrings: {
+                tr: { 
+                    game_title:"Adam Asmaca", 
+                    vs_pc:"PC'ye Karşı", 
+                    two_player:"2 Kişilik Mod", 
+                    setup_tournament_title:"Turnuva Ayarları", 
+                    player1_name_placeholder:"1. Oyuncu Adı", 
+                    player2_name_placeholder:"2. Oyuncu Adı", 
+                    rounds_label:"Raund Sayısı:", 
+                    rounds_2:"2 Raund", 
+                    rounds_4:"4 Raund", 
+                    rounds_6:"6 Raund", 
+                    rounds_8:"8 Raund", 
+                    rounds_10:"10 Raund", 
+                    start_tournament_btn:"Turnuvayı Başlat", 
+                    back_btn:"Geri Dön", 
+                    word_setup_title:"{player}, kelimeyi belirle... (Raund {round}/{max})", 
+                    select_category:"Kategori Seçin", 
+                    cat_celebrity:"Ünlü İsmi", 
+                    cat_city:"Şehir", 
+                    cat_country:"Ülke", 
+                    cat_animal:"Hayvan", 
+                    cat_movie:"Film Adı", 
+                    cat_custom:"Diğer...", 
+                    custom_category_placeholder:"Kategori adını yazın...", 
+                    word_input_placeholder:"Kelimeyi girin...", 
+                    start_round_btn:"Raundu Başlat", 
+                    back_to_settings_btn:"Ayarlara Geri Dön", 
+                    mistakes_label:"Hata:", 
+                    category_label:"Kategori:", 
+                    player_prompt_pc:"Kelimeyi bulmaya çalış!", 
+                    player_prompt_2p:"{player}, puan için hızlı ve dikkatli ol!", 
+                    main_menu_btn:"Ana Menü", 
+                    new_game_btn:"Yeni Oyun", 
+                    next_round_btn:"Sıradaki Raund", 
+                    game_over_btn:"Oyun Bitti! Sonuçları Gör", 
+                    new_tournament_btn:"Yeni Turnuva", 
+                    score_history_title:"Skor Geçmişi", 
+                    close_btn:"Kapat", 
+                    extra_life_title:"+1 Ekstra Hak Kazan", 
+                    extra_life_desc:"Kısa bir reklam izleyerek bir şans daha elde edebilirsin.", 
+                    watch_ad_btn:"Reklam İzle", 
+                    no_thanks_btn:"İstemiyorum", 
+                    confirm_home_title:"Ana Menüye Dön?", 
+                    confirm_home_desc:"Mevcut oyun ilerlemeniz kaybolacak. Emin misiniz?", 
+                    yes_btn:"Evet, Dön", 
+                    no_btn:"Hayır, Kal", 
+                    confirm_restart_title:"Oyunu Yeniden Başlat?", 
+                    confirm_restart_desc:"Mevcut kelime iptal edilecek ve yeni bir kelime sorulacak.", 
+                    yes_restart_btn:"Evet, Yeniden Başlat", 
+                    no_cancel_btn:"Hayır, Vazgeç", 
+                    alert_no_word_cat:"Lütfen bir kelime girin ve kategori seçin!", 
+                    win_message:"Tebrikler, Kazandın!", 
+                    lose_message:"Kaybettin!", 
+                    correct_word_was:"Doğru kelime:", 
+                    round_end_win:"Harika! {score} puan kazandın!", 
+                    round_end_lose:"Bilemedin! 0 Puan.", 
+                    game_over_title:"Oyun Bitti!", 
+                    winner_is:"{player} Kazandı!", 
+                    tie_game:"Oyun Berabere Bitti!", 
+                    final_scores:"Final Skorları:",
+                    time_label:"Süre:",
+                    watching_ad_btn:"Reklam izleniyor...",
+                    no_history_message:"Henüz skor geçmişi bulunmuyor.",
+                    round_label:"Raund",
+                    word_label:"Kelime",
+                    setter_label:"Soruyu Soran",
+                    guesser_label:"Tahmin Eden",
+                    points_label:"Kazanılan Puan",
+                    clear_history_btn:"Geçmişi Temizle",
+                    confirm_clear_title:"Geçmişi Temizle?",
+                    confirm_clear_desc:"Tüm skor geçmişi silinecek. Emin misiniz?",
+                    history_cleared:"Skor geçmişi temizlendi!",
+                    pc_mode_stats:"PC Modu İstatistikleri",
+                    two_player_stats:"2 Kişilik Mod İstatistikleri",
+                    average_score:"Başarı Ortalaması",
+                    wins:"Kazanma",
+                    losses:"Kaybetme",
+                    total_games:"Toplam Oyun",
+                    win_rate:"Kazanma Oranı",
+                    delete:"Sil",
+                    winners:"Kazananlar",
+                    player_stats:"Oyuncu İstatistikleri",
+                    total_points:"Toplam Puan",
+                    games_played:"Oynanan Oyun",
+                    win_streak:"Galibiyet Serisi",
+                    // YENİ: Silme onayı çevirileri
+                    confirm_delete_title:"Kaydı Sil?",
+                    confirm_delete_desc:"Bu kayıt kalıcı olarak silinecek. Emin misiniz?",
+                    confirm_delete_single_title:"Kaydı Sil?",
+                    confirm_delete_single_desc:"Bu oyun kaydı kalıcı olarak silinecek. Emin misiniz?",
+                    confirm_delete_all_title:"Tüm Geçmişi Temizle?",
+                    confirm_delete_all_desc:"Tüm skor geçmişi kalıcı olarak silinecek. Emin misiniz?",
+                    record_deleted:"Kayıt başarıyla silindi!",
+                    all_records_deleted:"Tüm kayıtlar başarıyla silindi!"
+                },
+                en: { 
+                    game_title:"Hangman", 
+                    vs_pc:"Versus PC", 
+                    two_player:"2 Player Mode", 
+                    setup_tournament_title:"Tournament Setup", 
+                    player1_name_placeholder:"Player 1 Name", 
+                    player2_name_placeholder:"Player 2 Name", 
+                    rounds_label:"Number of Rounds:", 
+                    rounds_2:"2 Rounds", 
+                    rounds_4:"4 Rounds", 
+                    rounds_6:"6 Rounds", 
+                    rounds_8:"8 Rounds", 
+                    rounds_10:"10 Rounds", 
+                    start_tournament_btn:"Start Tournament", 
+                    back_btn:"Back", 
+                    word_setup_title:"{player}, set the word... (Round {round}/{max})", 
+                    select_category:"Select Category", 
+                    cat_celebrity:"Celebrity", 
+                    cat_city:"City", 
+                    cat_country:"Country", 
+                    cat_animal:"Animal", 
+                    cat_movie:"Movie Title", 
+                    cat_custom:"Other...", 
+                    custom_category_placeholder:"Enter category name...", 
+                    word_input_placeholder:"Enter the word...", 
+                    start_round_btn:"Start Round", 
+                    back_to_settings_btn:"Back to Settings", 
+                    mistakes_label:"Mistakes:", 
+                    category_label:"Category:", 
+                    player_prompt_pc:"Try to find the word!", 
+                    player_prompt_2p:"{player}, be quick and careful for the points!", 
+                    main_menu_btn:"Main Menu", 
+                    new_game_btn:"New Game", 
+                    next_round_btn:"Next Round", 
+                    game_over_btn:"Game Over! See Results", 
+                    new_tournament_btn:"New Tournament", 
+                    score_history_title:"Score History", 
+                    close_btn:"Close", 
+                    extra_life_title:"+1 Extra Life", 
+                    extra_life_desc:"Watch a short ad to get another chance.", 
+                    watch_ad_btn:"Watch Ad", 
+                    no_thanks_btn:"No, thanks", 
+                    confirm_home_title:"Return to Main Menu?", 
+                    confirm_home_desc:"Your current game progress will be lost. Are you sure?", 
+                    yes_btn:"Yes, Return", 
+                    no_btn:"No, Stay", 
+                    confirm_restart_title:"Restart Game?", 
+                    confirm_restart_desc:"The current word will be cancelled and a new one will be chosen.", 
+                    yes_restart_btn:"Yes, Restart", 
+                    no_cancel_btn:"No, Cancel", 
+                    alert_no_word_cat:"Please enter a word and select a category!", 
+                    win_message:"Congratulations, You Won!", 
+                    lose_message:"You Lost!", 
+                    correct_word_was:"The correct word was:", 
+                    round_end_win:"Great! You earned {score} points!", 
+                    round_end_lose:"You missed! 0 Points.", 
+                    game_over_title:"Game Over!", 
+                    winner_is:"{player} Wins!", 
+                    tie_game:"It's a Tie!", 
+                    final_scores:"Final Scores:",
+                    time_label:"Time:",
+                    watching_ad_btn:"Watching ad...",
+                    no_history_message:"No score history yet.",
+                    round_label:"Round",
+                    word_label:"Word",
+                    setter_label:"Word Setter",
+                    guesser_label:"Guesser",
+                    points_label:"Points Earned",
+                    clear_history_btn:"Clear History",
+                    confirm_clear_title:"Clear History?",
+                    confirm_clear_desc:"All score history will be deleted. Are you sure?",
+                    history_cleared:"Score history cleared!",
+                    pc_mode_stats:"PC Mode Statistics",
+                    two_player_stats:"2 Player Mode Statistics",
+                    average_score:"Average Score",
+                    wins:"Wins",
+                    losses:"Losses",
+                    total_games:"Total Games",
+                    win_rate:"Win Rate",
+                    delete:"Delete",
+                    winners:"Winners",
+                    player_stats:"Player Statistics",
+                    total_points:"Total Points",
+                    games_played:"Games Played",
+                    win_streak:"Win Streak",
+                    // YENİ: Silme onayı çevirileri
+                    confirm_delete_title:"Delete Record?",
+                    confirm_delete_desc:"This record will be permanently deleted. Are you sure?",
+                    confirm_delete_single_title:"Delete Record?",
+                    confirm_delete_single_desc:"This game record will be permanently deleted. Are you sure?",
+                    confirm_delete_all_title:"Clear All History?",
+                    confirm_delete_all_desc:"All score history will be permanently deleted. Are you sure?",
+                    record_deleted:"Record successfully deleted!",
+                    all_records_deleted:"All records successfully deleted!"
+                },
+                es: { 
+                    game_title:"Ahorcado", 
+                    vs_pc:"Contra PC", 
+                    two_player:"Modo 2 Jugadores", 
+                    setup_tournament_title:"Configuración del Torneo", 
+                    player1_name_placeholder:"Nombre del Jugador 1", 
+                    player2_name_placeholder:"Nombre del Jugador 2", 
+                    rounds_label:"Número de Rondas:", 
+                    rounds_2:"2 Rondas", 
+                    rounds_4:"4 Rondas", 
+                    rounds_6:"6 Rondas", 
+                    rounds_8:"8 Rondas", 
+                    rounds_10:"10 Rondas", 
+                    start_tournament_btn:"Iniciar Torneo", 
+                    back_btn:"Atrás", 
+                    word_setup_title:"{player}, establece la palabra... (Ronda {round}/{max})", 
+                    select_category:"Seleccionar Categoría", 
+                    cat_celebrity:"Celebridad", 
+                    cat_city:"Ciudad", 
+                    cat_country:"País", 
+                    cat_animal:"Animal", 
+                    cat_movie:"Título de Película", 
+                    cat_custom:"Otro...", 
+                    custom_category_placeholder:"Ingrese nombre de categoría...", 
+                    word_input_placeholder:"Ingrese la palabra...", 
+                    start_round_btn:"Iniciar Ronda", 
+                    back_to_settings_btn:"Volver a Configuración", 
+                    mistakes_label:"Errores:", 
+                    category_label:"Categoría:", 
+                    player_prompt_pc:"¡Intenta encontrar la palabra!", 
+                    player_prompt_2p:"¡{player}, sé rápido y cuidadoso por los puntos!", 
+                    main_menu_btn:"Menú Principal", 
+                    new_game_btn:"Nuevo Juego", 
+                    next_round_btn:"Siguiente Ronda", 
+                    game_over_btn:"¡Juego Terminado! Ver Resultados", 
+                    new_tournament_btn:"Nuevo Torneo", 
+                    score_history_title:"Historial de Puntuaciones", 
+                    close_btn:"Cerrar", 
+                    extra_life_title:"+1 Vida Extra", 
+                    extra_life_desc:"Mira un anuncio corto para obtener otra oportunidad.", 
+                    watch_ad_btn:"Ver Anuncio", 
+                    no_thanks_btn:"No, gracias", 
+                    confirm_home_title:"¿Volver al Menú Principal?", 
+                    confirm_home_desc:"Tu progreso actual del juego se perderá. ¿Estás seguro?", 
+                    yes_btn:"Sí, Volver", 
+                    no_btn:"No, Quedarse", 
+                    confirm_restart_title:"¿Reiniciar Juego?", 
+                    confirm_restart_desc:"La palabra actual será cancelada y se elegirá una nueva.", 
+                    yes_restart_btn:"Sí, Reiniciar", 
+                    no_cancel_btn:"No, Cancelar", 
+                    alert_no_word_cat:"¡Por favor ingresa una palabra y selecciona una categoría!", 
+                    win_message:"¡Felicidades, Ganaste!", 
+                    lose_message:"¡Perdiste!", 
+                    correct_word_was:"La palabra correcta era:", 
+                    round_end_win:"¡Genial! Ganaste {score} puntos!", 
+                    round_end_lose:"¡Fallaste! 0 Puntos.", 
+                    game_over_title:"¡Juego Terminado!", 
+                    winner_is:"¡{player} Gana!", 
+                    tie_game:"¡Es un Empate!", 
+                    final_scores:"Puntuaciones Finales:",
+                    time_label:"Tiempo:",
+                    watching_ad_btn:"Viendo anuncio...",
+                    no_history_message:"Aún no hay historial de puntuaciones.",
+                    round_label:"Ronda",
+                    word_label:"Palabra",
+                    setter_label:"Creador de Palabra",
+                    guesser_label:"Adivinador",
+                    points_label:"Puntos Ganados",
+                    clear_history_btn:"Limpiar Historial",
+                    confirm_clear_title:"¿Limpiar Historial?",
+                    confirm_clear_desc:"Todo el historial de puntuaciones será eliminado. ¿Estás seguro?",
+                    history_cleared:"¡Historial de puntuaciones limpiado!",
+                    pc_mode_stats:"Estadísticas del Modo PC",
+                    two_player_stats:"Estadísticas del Modo 2 Jugadores",
+                    average_score:"Puntuación Promedio",
+                    wins:"Victorias",
+                    losses:"Derrotas",
+                    total_games:"Juegos Totales",
+                    win_rate:"Tasa de Victoria",
+                    delete:"Eliminar",
+                    winners:"Ganadores",
+                    player_stats:"Estadísticas del Jugador",
+                    total_points:"Puntos Totales",
+                    games_played:"Juegos Jugados",
+                    win_streak:"Racha de Victorias",
+                    // YENİ: Silme onayı çevirileri
+                    confirm_delete_title:"¿Eliminar Registro?",
+                    confirm_delete_desc:"Este registro se eliminará permanentemente. ¿Estás seguro?",
+                    confirm_delete_single_title:"¿Eliminar Registro?",
+                    confirm_delete_single_desc:"Este registro de juego se eliminará permanentemente. ¿Estás seguro?",
+                    confirm_delete_all_title:"¿Limpiar Todo el Historial?",
+                    confirm_delete_all_desc:"Todo el historial de puntuaciones se eliminará permanentemente. ¿Estás seguro?",
+                    record_deleted:"¡Registro eliminado con éxito!",
+                    all_records_deleted:"¡Todos los registros eliminados con éxito!"
+                },
+                de: { 
+                    game_title:"Galgenmännchen", 
+                    vs_pc:"Gegen PC", 
+                    two_player:"2-Spieler-Modus", 
+                    setup_tournament_title:"Turnier-Einrichtung", 
+                    player1_name_placeholder:"Spieler 1 Name", 
+                    player2_name_placeholder:"Spieler 2 Name", 
+                    rounds_label:"Anzahl der Runden:", 
+                    rounds_2:"2 Runden", 
+                    rounds_4:"4 Runden", 
+                    rounds_6:"6 Runden", 
+                    rounds_8:"8 Runden", 
+                    rounds_10:"10 Runden", 
+                    start_tournament_btn:"Turnier Starten", 
+                    back_btn:"Zurück", 
+                    word_setup_title:"{player}, lege das Wort fest... (Runde {round}/{max})", 
+                    select_category:"Kategorie Auswählen", 
+                    cat_celebrity:"Berühmtheit", 
+                    cat_city:"Stadt", 
+                    cat_country:"Land", 
+                    cat_animal:"Tier", 
+                    cat_movie:"Film Titel", 
+                    cat_custom:"Andere...", 
+                    custom_category_placeholder:"Kategoriename eingeben...", 
+                    word_input_placeholder:"Wort eingeben...", 
+                    start_round_btn:"Runde Starten", 
+                    back_to_settings_btn:"Zurück zu Einstellungen", 
+                    mistakes_label:"Fehler:", 
+                    category_label:"Kategorie:", 
+                    player_prompt_pc:"Versuche das Wort zu finden!", 
+                    player_prompt_2p:"{player}, sei schnell und vorsichtig für die Punkte!", 
+                    main_menu_btn:"Hauptmenü", 
+                    new_game_btn:"Neues Spiel", 
+                    next_round_btn:"Nächste Runde", 
+                    game_over_btn:"Spiel Beendet! Ergebnisse Anzeigen", 
+                    new_tournament_btn:"Neues Turnier", 
+                    score_history_title:"Punktestand-Verlauf", 
+                    close_btn:"Schließen", 
+                    extra_life_title:"+1 Extra Leben", 
+                    extra_life_desc:"Schau eine kurze Werbung, um eine weitere Chance zu erhalten.", 
+                    watch_ad_btn:"Werbung Anschauen", 
+                    no_thanks_btn:"Nein, Danke", 
+                    confirm_home_title:"Zum Hauptmenü zurückkehren?", 
+                    confirm_home_desc:"Dein aktueller Spielstand geht verloren. Bist du sicher?", 
+                    yes_btn:"Ja, Zurück", 
+                    no_btn:"Nein, Bleiben", 
+                    confirm_restart_title:"Spiel Neustarten?", 
+                    confirm_restart_desc:"Das aktuelle Wort wird abgebrochen und ein neues wird ausgewählt.", 
+                    yes_restart_btn:"Ja, Neustarten", 
+                    no_cancel_btn:"Nein, Abbrechen", 
+                    alert_no_word_cat:"Bitte gib ein Wort ein und wähle eine Kategorie!", 
+                    win_message:"Glückwunsch, Du Hast Gewonnen!", 
+                    lose_message:"Du Hast Verloren!", 
+                    correct_word_was:"Das richtige Wort war:", 
+                    round_end_win:"Großartig! Du hast {score} Punkte verdient!", 
+                    round_end_lose:"Du hast verfehlt! 0 Punkte.", 
+                    game_over_title:"Spiel Beendet!", 
+                    winner_is:"{player} Gewinnt!", 
+                    tie_game:"Unentschieden!", 
+                    final_scores:"Endstände:",
+                    time_label:"Zeit:",
+                    watching_ad_btn:"Werbung wird angeschaut...",
+                    no_history_message:"Noch kein Punktestand-Verlauf vorhanden.",
+                    round_label:"Runde",
+                    word_label:"Wort",
+                    setter_label:"Wortsetzer",
+                    guesser_label:"Rater",
+                    points_label:"Erzielte Punkte",
+                    clear_history_btn:"Verlauf Löschen",
+                    confirm_clear_title:"Verlauf Löschen?",
+                    confirm_clear_desc:"Der gesamte Punktestand-Verlauf wird gelöscht. Bist du sicher?",
+                    history_cleared:"Punktestand-Verlauf gelöscht!",
+                    pc_mode_stats:"PC-Modus-Statistiken",
+                    two_player_stats:"2-Spieler-Modus-Statistiken",
+                    average_score:"Durchschnittspunktzahl",
+                    wins:"Siege",
+                    losses:"Niederlagen",
+                    total_games:"Gesamtspiele",
+                    win_rate:"Gewinnrate",
+                    delete:"Löschen",
+                    winners:"Gewinner",
+                    player_stats:"Spielerstatistiken",
+                    total_points:"Gesamtpunkte",
+                    games_played:"Gespielte Spiele",
+                    win_streak:"Gewinnserie",
+                    // YENİ: Silme onayı çevirileri
+                    confirm_delete_title:"Datensatz Löschen?",
+                    confirm_delete_desc:"Dieser Datensatz wird dauerhaft gelöscht. Bist du sicher?",
+                    confirm_delete_single_title:"Datensatz Löschen?",
+                    confirm_delete_single_desc:"Dieser Spiel-Datensatz wird dauerhaft gelöscht. Bist du sicher?",
+                    confirm_delete_all_title:"Gesamten Verlauf Löschen?",
+                    confirm_delete_all_desc:"Der gesamte Punktestand-Verlauf wird dauerhaft gelöscht. Bist du sicher?",
+                    record_deleted:"Datensatz erfolgreich gelöscht!",
+                    all_records_deleted:"Alle Datensätze erfolgreich gelöscht!"
+                },
+                fr: { 
+                    game_title:"Jeu du Pendu", 
+                    vs_pc:"Contre PC", 
+                    two_player:"Mode 2 Joueurs", 
+                    setup_tournament_title:"Configuration du Tournoi", 
+                    player1_name_placeholder:"Nom du Joueur 1", 
+                    player2_name_placeholder:"Nom du Joueur 2", 
+                    rounds_label:"Nombre de Tours:", 
+                    rounds_2:"2 Tours", 
+                    rounds_4:"4 Tours", 
+                    rounds_6:"6 Tours", 
+                    rounds_8:"8 Tours", 
+                    rounds_10:"10 Tours", 
+                    start_tournament_btn:"Démarrer le Tournoi", 
+                    back_btn:"Retour", 
+                    word_setup_title:"{player}, définis le mot... (Tour {round}/{max})", 
+                    select_category:"Sélectionner une Catégorie", 
+                    cat_celebrity:"Célébrité", 
+                    cat_city:"Ville", 
+                    cat_country:"Pays", 
+                    cat_animal:"Animal", 
+                    cat_movie:"Titre de Film", 
+                    cat_custom:"Autre...", 
+                    custom_category_placeholder:"Entrez le nom de la catégorie...", 
+                    word_input_placeholder:"Entrez le mot...", 
+                    start_round_btn:"Démarrer le Tour", 
+                    back_to_settings_btn:"Retour aux Paramètres", 
+                    mistakes_label:"Erreurs:", 
+                    category_label:"Catégorie:", 
+                    player_prompt_pc:"Essayez de trouver le mot!", 
+                    player_prompt_2p:"{player}, sois rapide et prudent pour les points!", 
+                    main_menu_btn:"Menu Principal", 
+                    new_game_btn:"Nouvelle Partie", 
+                    next_round_btn:"Tour Suivant", 
+                    game_over_btn:"Partie Terminée! Voir les Résultats", 
+                    new_tournament_btn:"Nouveau Tournoi", 
+                    score_history_title:"Historique des Scores", 
+                    close_btn:"Fermer", 
+                    extra_life_title:"+1 Vie Supplémentaire", 
+                    extra_life_desc:"Regardez une courte publicité pour obtenir une autre chance.", 
+                    watch_ad_btn:"Regarder la Pub", 
+                    no_thanks_btn:"Non, Merci", 
+                    confirm_home_title:"Retour au Menu Principal?", 
+                    confirm_home_desc:"Votre progression actuelle sera perdue. Êtes-vous sûr?", 
+                    yes_btn:"Oui, Retour", 
+                    no_btn:"Non, Rester", 
+                    confirm_restart_title:"Redémarrer la Partie?", 
+                    confirm_restart_desc:"Le mot actuel sera annulé et un nouveau sera choisi.", 
+                    yes_restart_btn:"Oui, Redémarrer", 
+                    no_cancel_btn:"Non, Annuler", 
+                    alert_no_word_cat:"Veuillez entrer un mot et sélectionner une catégorie!", 
+                    win_message:"Félicitations, Vous Avez Gagné!", 
+                    lose_message:"Vous Avez Perdu!", 
+                    correct_word_was:"Le mot correct était:", 
+                    round_end_win:"Génial! Vous avez gagné {score} points!", 
+                    round_end_lose:"Vous avez manqué! 0 Point.", 
+                    game_over_title:"Partie Terminée!", 
+                    winner_is:"{player} Gagne!", 
+                    tie_game:"Match Nul!", 
+                    final_scores:"Scores Finaux:",
+                    time_label:"Temps:",
+                    watching_ad_btn:"Regarde la publicité...",
+                    no_history_message:"Aucun historique de score pour le moment.",
+                    round_label:"Tour",
+                    word_label:"Mot",
+                    setter_label:"Définisseur de Mot",
+                    guesser_label:"Devineur",
+                    points_label:"Points Gagnés",
+                    clear_history_btn:"Effacer l'Historique",
+                    confirm_clear_title:"Effacer l'Historique?",
+                    confirm_clear_desc:"Tout l'historique des scores sera supprimé. Êtes-vous sûr?",
+                    history_cleared:"Historique des scores effacé!",
+                    pc_mode_stats:"Statistiques du Mode PC",
+                    two_player_stats:"Statistiques du Mode 2 Joueurs",
+                    average_score:"Score Moyen",
+                    wins:"Victoires",
+                    losses:"Défaites",
+                    total_games:"Parties Totales",
+                    win_rate:"Taux de Victoire",
+                    delete:"Supprimer",
+                    winners:"Gagnants",
+                    player_stats:"Statistiques du Joueur",
+                    total_points:"Points Totaux",
+                    games_played:"Parties Jouées",
+                    win_streak:"Série de Victoires",
+                    // YENİ: Silme onayı çevirileri
+                    confirm_delete_title:"Supprimer l'Enregistrement?",
+                    confirm_delete_desc:"Cet enregistrement sera définitivement supprimé. Êtes-vous sûr?",
+                    confirm_delete_single_title:"Supprimer l'Enregistrement?",
+                    confirm_delete_single_desc:"Cet enregistrement de jeu sera définitivement supprimé. Êtes-vous sûr?",
+                    confirm_delete_all_title:"Effacer Tout l'Historique?",
+                    confirm_delete_all_desc:"Tout l'historique des scores sera définitivement supprimé. Êtes-vous sûr?",
+                    record_deleted:"Enregistrement supprimé avec succès!",
+                    all_records_deleted:"Tous les enregistrements supprimés avec succès!"
+                }
+                // Diğer diller için de aynı şekilde çeviriler eklenebilir
+            },
+            pcWordDatabase: {
+    tr: {
+        cat_country: ["TÜRKİYE","ALMANYA","JAPONYA","BREZİLYA","KANADA","FRANSA","İTALYA","İSPANYA","ABD","AVUSTRALYA",
+                      "MEXİCO","ARJANTİN","ÇİN","HİNDİSTAN","RUSYA","İSVEÇ","NORVEÇ","İSVİÇRE","İNGİLTERE","HOLLANDA",
+                      "PORTUGAL","YUNANİSTAN","POLONYA","BELÇİKA","AVUSTURYA","DANİMARKA","FİNLANDİYA","İZLANDA","İRLANDA","SLOVENYA",
+                      "MACARİSTAN","SLOVAKYA","ÇEKYA","ROMANYA","BULGARİSTAN","HIRVATİSTAN","LİTVANYA","LETONYA","ESTONYA","UKRAYNA",
+                      "KATAR","SUUDİ ARABİSTAN","BAE","İSRAİL","İRAN","PAKİSTAN","AFGANİSTAN","İRAK","SURİYE","LÜBNAN"],
+        cat_city: ["İSTANBUL","ANKARA","İZMİR","BURSA","ADANA","ANTALYA","KONYA","TRABZON","GAZİANTEP","MERSİN",
+                   "ESKİŞEHİR","SAMSUN","DİYARBAKIR","VAN","ŞANLIURFA","KAYSERİ","BALIKESİR","AFYON","SİVAS","ORDU",
+                   "ÇORUM","KASTAMONU","RİZE","KOCAELİ","SAKARYA","TEKİRDAĞ","EDİRNE","MALATYA","ELAZIĞ","AMASYA",
+                   "NEVŞEHİR","KARAMAN","BATMAN","MARDİN","HAKKARİ","ARTVİN","BOLU","DÜZCE","KIRKLARELİ","ÇANAKKALE",
+                   "BİLECİK","KIRŞEHİR","YOZGAT","TOKAT","SİİRT","KİLİS","OSMANİYE","ŞIRNAK","ARDAHAN","IĞDIR"],
+        cat_animal: ["ASLAN","KAPLUMBAĞA","PENGUEN","ZÜRAFA","KANGURU","FİL","TİLKİ","AYI","KURT","TAVŞAN",
+                     "KOALA","PANDA","LEYLEK","ÖRDEK","BALIK","DENİZATI","AHTAPOT","YUNUS","KÖPEK","KEDİ",
+                     "MAYMUN","ZEBRA","AT","GİRENK","SU AYGIRI","KARGA","ŞAHİNLER","KARTAL","LEOPAR","VAHŞİ KEDİ",
+                     "FOK","DENİZ ASLANI","TİMSAH","HIRSIZ KAPLAN","SU KAPLUMBAĞASI","KİRPİ","KAPLUMBAĞA","TAVUK","HOROZ","KAZ",
+                     "GÜVERCİN","SERÇE","SİNEK","ARICIK","ÇİÇEK BÖCEĞİ","YABAN DOMUZU","GELİNCİK","SINCAP","FARE","GERGEDAN"],
+        cat_movie: ["BABA","ESARETİN BEDELİ","YÜZÜKLERİN EFENDİSİ","KARANLIK ŞÖVALYE","HABABAM SINIFI","TİTANİK","GLADİATOR","İNCELEME","AVATAR","İNCELEME 2",
+                    "INCEPTION","JURASSIC PARK","KARA ŞÖVALYE","FORREST GUMP","STAR WARS","YILDIZ SAVAŞLARI","SPIDERMAN","IRON MAN","THOR","HARRY POTTER",
+                    "FROZEN","LORD OF THE RINGS","THE MATRIX","ALIEN","TERMINATOR","THE GODFATHER","PULP FICTION","SHREK","FINDING NEMO","UP",
+                    "FROG","THE LION KING","MOANA","CINDERELLA","SNOW WHITE","SLEEPING BEAUTY","THE AVENGERS","BLACK PANTHER","CAPTAIN AMERICA","IRON MAN 2",
+                    "DEADPOOL","HARRY POTTER 2","HARRY POTTER 3","HARRY POTTER 4","HARRY POTTER 5","HARRY POTTER 6","HARRY POTTER 7","KARATE KİD","ROCKY","RAMBO"],
+        cat_celebrity: ["CEM YILMAZ","SEZEN AKSU","TARKAN","AZİZ SANCAR","MUSTAFA KEMAL ATATÜRK","MAHMUT TUNCER","HADİSE","BEREN SAAT","KIVANÇ TATLITUĞ","ELÇİN SANGU",
+                        "NESLİHAN ATAGÜL","BURAK ÖZCİVİT","BENGÜ","HALİT ERGENÇ","ENGİN ALTAN DÜZYATAN","CHP LEADER","AK PARTİ LEADER","BARİŞ MANÇO","MFÖ","AJDA PEKKAN",
+                        "KENAN İMİRZALIOĞLU","FİLİZ AKIN","GÜNAYDIN","ÖZGE ÖZBERK","SERENAY SARKAÇ","TUBA BÜYÜKÜSTÜN","HÜLYA KOÇYİĞİT","FERHAN ŞENSOY","ARDA TURAN","HÜSEYİN TOSUN",
+                        "MEHMET ALİ ERBİL","ÇAĞATAY ULUSOY","MAHŞERİN 5 YILDIZI","DERYA KORAY","MUSTAFA SANDAL","SILA","GÜLBEN ERGEN","FERDİ TAYFUR","EMEL SAYIN","BARIŞ AKarsu",
+                        "CEMRE BİRSEL","MELİS SEZEN","SERDAR ORTAÇ","ÖZGÜR KÜRŞAT","BURCU GÜNDÜZ","ONUR BORA","SELÇUK TEPELI","FARUK AKSOY","YILMAZ ERGÜN","HALUK LEVENT"]
+    },
+    en: {
+        cat_country: ["UNITED STATES","CANADA","AUSTRALIA","BRAZIL","JAPAN","FRANCE","GERMANY","ITALY","SPAIN","MEXICO",
+                      "ARGENTINA","CHINA","INDIA","RUSSIA","SWEDEN","NORWAY","SWITZERLAND","UK","NETHERLANDS","PORTUGAL",
+                      "GREECE","POLAND","BELGIUM","AUSTRIA","DENMARK","FINLAND","ICELAND","IRELAND","SLOVENIA","HUNGARY",
+                      "SLOVAKIA","CZECH REPUBLIC","ROMANIA","BULGARIA","CROATIA","LITHUANIA","LATVIA","ESTONIA","UKRAINE","QATAR",
+                      "SAUDI ARABIA","UAE","ISRAEL","IRAN","PAKISTAN","AFGHANISTAN","IRAQ","SYRIA","LEBANON","TURKEY"],
+        cat_city: ["LONDON","PARIS","TOKYO","NEW YORK","SYDNEY","BERLIN","ROME","MADRID","AMSTERDAM","BRUSSELS",
+                   "VIENNA","PRAGUE","BUDAPEST","DUBLIN","COPENHAGEN","OSLO","STOCKHOLM","HELSINKI","REYKJAVIK","LISBON",
+                   "ATHENS","WARSAW","MUNICH","HAMBURG","FRANKFURT","MALMO","GOTHENBURG","BRIGHTON","MANCHESTER","EDINBURGH",
+                   "GLASGOW","LEEDS","BELFAST","CARDIFF","LIVERPOOL","NOTTINGHAM","BIRMINGHAM","BRISTOL","SHEFFIELD","NEWCASTLE",
+                   "SUNDERLAND","PLYMOUTH","SOUTHAMPTON","LEICESTER","PORTSMOUTH","SOUTHEND","DURHAM","EXETER","OXFORD","CAMBRIDGE"],
+        cat_animal: ["LION","TURTLE","ELEPHANT","DOLPHIN","PENGUIN","TIGER","BEAR","FOX","WOLF","RABBIT",
+                     "KOALA","PANDA","STORK","DUCK","FISH","SEAHORSE","OCTOPUS","DOG","CAT","MONKEY",
+                     "ZEBRA","HORSE","RHINO","HIPPO","SQUIRREL","RAVEN","EAGLE","LEOPARD","SNAKE","CAMEL",
+                     "OWL","PARROT","HUMMINGBIRD","BUTTERFLY","SPARROW","CRAB","LOBSTER","SHARK","WHALE","SEAL",
+                     "OTTER","FROG","TOAD","CROCODILE","ALLIGATOR","ANTELOPE","BUFFALO","CHEETAH","GORILLA","COUGAR"],
+        cat_movie: ["THE GODFATHER","STAR WARS","PULP FICTION","TITANIC","THE MATRIX","INCEPTION","GLADIATOR","AVATAR","JURASSIC PARK","BLACK PANTHER",
+                    "IRON MAN","SPIDERMAN","THOR","HARRY POTTER","FROZEN","THE LION KING","MOANA","CINDERELLA","SNOW WHITE","SLEEPING BEAUTY",
+                    "THE AVENGERS","CAPTAIN AMERICA","DEADPOOL","ALIEN","TERMINATOR","UP","SHREK","FINDING NEMO","THE DARK KNIGHT","BATMAN",
+                    "SUPERMAN","IRON MAN 2","ANT-MAN","GUARDIANS OF THE GALAXY","DOCTOR STRANGE","BLACK WIDOW","WONDER WOMAN","AQUAMAN","JOKER","JOHN WICK",
+                    "INCEPTION 2","INTERSTELLAR","DUNKIRK","MEMENTO","THE PRESTIGE","TWILIGHT","HUNGER GAMES","FROZEN 2","COCO","SOUL"],
+        cat_celebrity: ["ALBERT EINSTEIN","MADONNA","MICHAEL JACKSON","LEONARDO DICAPRIO","BEYONCE","TAYLOR SWIFT","BRAD PITT","ANGELINA JOLIE","JOHNNY DEPP","GEORGE CLOONEY",
+                        "RIHANNA","SELENA GOMEZ","KIM KARDASHIAN","KANYE WEST","JUSTIN BIEBER","EMMA WATSON","DWAYNE JOHNSON","SCARLETT JOHANSSON","CHRIS HEMSWORTH","CHRIS EVANS",
+                        "WILL SMITH","NATALIE PORTMAN","JENNIFER LAWRENCE","ROBERT DOWNEY JR","TOM HANKS","JULIA ROBERTS","BRUNO MARS","KATY PERRY","ARIANA GRANDE","MILEY CYRUS",
+                        "LEONARDO DA VINCI","VINCENT VAN GOGH","PABLO PICASSO","MICHELANGELO","FRIDA KAHLO","SALVADOR DALI","ANDY WARHOL","CLINT EASTWOOD","MARILYN MONROE","ELVIS PRESLEY",
+                        "FRED ASTAIRE","AUDREY HEPBURN","JAMES DEAN","MORGAN FREEMAN","ROBIN WILLIAMS","AL PACINO","ROBERT DE NIRO","HEATH LEDGER","JOHNNY CASH","ELTON JOHN"]
+    },
+    es: {
+        cat_country: ["ESPAÑA","MÉXICO","ARGENTINA","COLOMBIA","CHILE","BRASIL","PERÚ","VENEZUELA","ECUADOR","BOLIVIA",
+                      "URUGUAY","PARAGUAY","CUBA","GUATEMALA","HONDURAS","EL SALVADOR","NICARAGUA","COSTA RICA","PANAMÁ","PUERTO RICO",
+                      "DOMINICANA","PORTUGAL","FRANCIA","ALEMANIA","ITALIA","SUIZA","AUSTRIA","BÉLGICA","HOLANDA","REINO UNIDO",
+                      "IRLANDA","RUSIA","CHINA","JAPÓN","INDIA","TURQUÍA","EGIPTO","MARRUECOS","ARGELIA","SUDÁFRICA",
+                      "KENIA","NIGERIA","GHANA","SENEGAL","CAMERÚN","MALI","SUDÁN","SIRIA","LIBANO","ISRAEL"],
+        cat_city: ["MADRID","BARCELONA","BUENOS AIRES","MÉXICO","LIMA","RIO DE JANEIRO","SAO PAULO","SANTIAGO","BOGOTÁ","CARACAS",
+                   "MONTEVIDEO","ASUNCIÓN","LA HABANA","GUATEMALA","TEGUCIGALPA","SAN SALVADOR","MANAGUA","SAN JOSÉ","PANAMÁ","SAN JUAN",
+                   "SANTO DOMINGO","PORTO","PARÍS","BERLÍN","ROMA","ZÚRICH","VIENA","BRUSELAS","ÁMSTERDAM","LONDRES",
+                   "DUBLÍN","MOSCÚ","PEKÍN","TOKIO","NUEVA DELHI","ESTAMBUL","EL CAIRO","RABAT","ARGEL","CIUDAD DEL CABO",
+                   "NAIROBI","LAGOS","ACCRA","DAKAR","YAUNDÉ","BAMAKO","JARTUM","DAMASCO","BEIRUT","JERUSALÉN"],
+        cat_animal: ["LEÓN","TORTUGA","ELEFANTE","DELFÍN","PINGÜINO","TIGRE","OSO","ZORRO","LOBO","CONEJO",
+                     "KOALA","PANDA","CIGÜEÑA","PATO","PEZ","CABALLITO DE MAR","PULPO","PERRO","GATO","MONO",
+                     "CEBRA","CABALLO","RINOCERONTE","HIPOPÓTAMO","ARDILLA","CUERVO","ÁGUILA","LEOPARDO","SERPIENTE","CAMELLO",
+                     "BÚHO","LORO","COLIBRÍ","MARIPOSA","GORRIÓN","CANGREJO","LANGOSTA","TIBURÓN","BALLENA","FOCA",
+                     "NUTRIA","RANA","SAPO","COCODRILO","CAIMÁN","ANTÍLOPE","BÚFALO","GUEPARDO","GORILA","PUMA"],
+        cat_movie: ["EL PADRINO","STAR WARS","PULP FICTION","TITANIC","MATRIX","INCEPTION","GLADIADOR","AVATAR","PARQUE JURÁSICO","BLACK PANTHER",
+                    "IRON MAN","SPIDERMAN","THOR","HARRY POTTER","FROZEN","EL REY LEÓN","MOANA","CENICIENTA","BLANCANIEVES","LA BELLA DURMIENTE",
+                    "LOS VENGADORES","CAPITÁN AMÉRICA","DEADPOOL","ALIEN","TERMINATOR","UP","SHREK","BUSCANDO A NEMO","EL CABALLERO OSCURO","BATMAN",
+                    "SUPERMAN","IRON MAN 2","ANT-MAN","GUARDIANES DE LA GALAXIA","DOCTOR STRANGE","BLACK WIDOW","MUJER MARAVILLA","AQUAMAN","JOKER","JOHN WICK",
+                    "INTERSTELLAR","DUNKERQUE","MEMENTO","EL PRESTIGIO","CREPÚSCULO","JUEGOS DEL HAMBRE","COCO","SOUL","FROZEN 2","INCEPTION 2"],
+        cat_celebrity: ["PABLO PICASSO","SHAKIRA","LIONEL MESSI","PENÉLOPE CRUZ","GAEL GARCÍA BERNAL","RAÚL GONZÁLEZ","ANTONIO BANDERAS","SALMA HAYEK","ENRIQUE IGLESIAS","RAFAEL NADAL",
+                        "SOPHIA LOREN","CARMEN MAURA","RAQUEL DEL ROSARIO","JORGE LORENZO","DAVID BISBAL","ALEJANDRO SANZ","JUANES","MIGUEL BOSÉ","JENNIFER LOPEZ","RICKY MARTIN",
+                        "CARLOS SANTANA","LOPEZ","ANA TORROJA","ALEJANDRO FERNÁNDEZ","PABLO ALBORÁN","THALÍA","FLORENCIA PÉREZ","EMILIO ESTEVEZ","MARIO CASAS","UMA THURMAN",
+                        "KEIRA KNIGHTLEY","ORLANDO BLOOM","CHRISTIAN BALE","HUGH JACKMAN","NATALIE PORTMAN","TOM HANKS","JULIA ROBERTS","BRAD PITT","ANGELINA JOLIE","JOHNNY DEPP"]
+    },
+    de: {
+        cat_country: ["DEUTSCHLAND","ÖSTERREICH","SCHWEIZ","FRANKREICH","ITALIEN","SPANIEN","PORTUGAL","NIEDERLANDE","BELGIEN","LUXEMBURG",
+                      "NORWEGEN","SCHWEDEN","FINNLAND","DÄNEMARK","ISLAND","IRLAND","UKRAINE","RUSSLAND","CHINA","JAPAN",
+                      "INDIEN","BRAZIL","ARGENTINIEN","MEXIKO","KUBA","AUSTRALIEN","NEUSEELAND","KANADA","USA","SÜDAFRIKA",
+                      "ÄGYPTEN","MAROKKO","ALGERIEN","TUNESIEN","LIBYEN","KENIA","NIGERIA","GHANA","SENEGAL","KAMERUN",
+                      "MALI","SUDAN","SYRIEN","LIBANON","ISRAEL","IRAN","PAKISTAN","AFGHANISTAN","IRAQ","TÜRKEI"],
+        cat_city: ["BERLIN","WIEN","ZÜRICH","MÜNCHEN","HAMBURG","KÖLN","FRANKFURT","STUTTGART","DÜSSELDORF","DORTMUND",
+                   "ESSEN","BREMEN","LEIPZIG","DRESDEN","HANNOVER","NÜRNBERG","DORTMUND","BONN","KIEL","MAGDEBURG",
+                   "ROSTOCK","FREIBURG","MAINZ","ERFURT","SAALE","BRAUNSCHWEIG","MANNHEIM","HEIDELBERG","ULM","AUGSBURG",
+                   "REGENSBURG","INNSBRUCK","SALZBURG","GRAZ","LINZ","KLAGENFURT","VILLACH","BOZEN","TRENTINO","BOLZANO",
+                   "BIEL","GENF","LAUSANNE","LUGANO","ZUG","LUCERNE","INTERLAKEN","THUN","NEUCHÂTEL","FRIBOURG"],
+        cat_animal: ["LÖWE","SCHILDKRÖTE","ELEFANT","DELFIN","PINGUIN","TIGER","BÄR","FUCHS","WOLF","KANINCHEN",
+                     "KOALA","PANDA","STORCH","ENTE","FISCH","SEEPFERDCHEN","OKTOPUS","HUND","KATZE","AFFE",
+                     "ZEBRA","PFERD","NASHORN","HIPPO","EICHHÖRNCHEN","RABE","ADLER","LEOPARD","SCHLANGE","KAMEL",
+                     "EULE","PAPAGEI","KOLIBRI","SCHMETTERLING","SPATZ","KRABBE","HUMMER","HAI","WAL","SEEOTTER",
+                     "OTTER","FROSCH","TOAD","KROKODIL","ALLIGATOR","ANTELOPE","BÜFFEL","GEPARD","GORILLA","PUMA"],
+        cat_movie: ["DER PATE","STAR WARS","PULP FICTION","TITANIC","MATRIX","INCEPTION","GLADIATOR","AVATAR","JURASSIC PARK","BLACK PANTHER",
+                    "IRON MAN","SPIDERMAN","THOR","HARRY POTTER","FROZEN","DER KÖNIG DER LÖWEN","MOANA","ASCHENPUTTEL","SCHNEEWITTCHEN","DORNRÖSCHEN",
+                    "AVENGERS","CAPTAIN AMERICA","DEADPOOL","ALIEN","TERMINATOR","UP","SHREK","FINDING NEMO","DARK KNIGHT","BATMAN",
+                    "SUPERMAN","IRON MAN 2","ANT-MAN","GUARDIANS OF THE GALAXY","DOCTOR STRANGE","BLACK WIDOW","WONDER WOMAN","AQUAMAN","JOKER","JOHN WICK",
+                    "INTERSTELLAR","DUNKIRK","MEMENTO","THE PRESTIGE","TWILIGHT","HUNGER GAMES","FROZEN 2","COCO","SOUL","INCEPTION 2"],
+        cat_celebrity: ["ALBERT EINSTEIN","MARLENE DIETRICH","THOMAS MÜLLER","ANGELA MERKEL","JOHANN WOLFGANG VON GOETHE","HELMUT KOHL","FRITZ LANG","CLINT EASTWOOD","HEATH LEDGER","BRAD PITT",
+                        "ANGELINA JOLIE","JOHNNY DEPP","GEORGE CLOONEY","LEONARDO DICAPRIO","BEYONCE","MADONNA","MICHAEL JACKSON","RIHANNA","SELENA GOMEZ","TAYLOR SWIFT",
+                        "JULIA ROBERTS","TOM HANKS","EMMA WATSON","CHRIS HEMSWORTH","CHRIS EVANS","SCARLETT JOHANSSON","WILL SMITH","NATALIE PORTMAN","ROBERT DOWNEY JR","AL PACINO",
+                        "ROBERT DE NIRO","HEATH LEDGER","JOHNNY CASH","ELVIS PRESLEY","AUDREY HEPBURN","FRED ASTAIRE","MORGAN FREEMAN","ROBIN WILLIAMS","JAMES DEAN","MARILYN MONROE"]
+    },
+    fr: {
+        cat_country: ["FRANCE","BELGIQUE","SUISSE","CANADA","ALGÉRIE","ITALIE","ESPAGNE","PORTUGAL","ROYAUME-UNI","IRLANDE",
+                      "ALLEMAGNE","AUTRICHE","NORVÈGE","SUÈDE","FINLANDE","DANEMARK","ISLANDE","RUSSIE","CHINE","JAPON",
+                      "INDIA","BRAZIL","ARGENTINE","MEXIQUE","CUBA","AUSTRALIE","NOUVELLE-ZÉLANDE","ÉGYPTE","MAROC","TUNISIE",
+                      "SÉNÉGAL","SUDAN","CAMEROUN","MALI","LIBYE","ÉTATS-UNIS","URUGUAY","PARAGUAY","BOLIVIE","ÉQUATEUR",
+                      "COLOMBIE","VENEZUELA","CHILI","PÉROU","GUATEMALA","HONDURAS","NICARAGUA","COSTA RICA","PANAMA","PUERTO RICO"],
+        cat_city: ["PARIS","MARSEILLE","LYON","BRUXELLES","MONTRÉAL","TOULOUSE","NICE","NANTES","STRASBOURG","LILLE",
+                   "GENÈVE","ZURICH","BERNE","VIENNE","SALZBOURG","MUNICH","BERLIN","ROME","MADRID","BARCELONA",
+                   "LISBONNE","OSLO","STOCKHOLM","HELSINKI","REYKJAVIK","DUBLIN","LONDRES","EDIMBOURG","GLASGOW","BELFAST",
+                   "COPENHAGUE","PRAGUE","BUDAPEST","BUCAREST","SOFIA","ZAGREB","LJUBLJANA","VILNIUS","RIGA","TALLINN",
+                   "KIEV","DOHA","RIYAD","ABU DHABI","TEL AVIV","TEHERAN","ISLAMABAD","KABOUL","BAGDAD","Damas"],
+        cat_animal: ["LION","TORTUE","ÉLÉPHANT","DAUPHIN","PINGOUIN","TIGRE","OURS","RENARD","LOUP","LAPIN",
+                     "KOALA","PANDA","CIGOGNE","CANARD","POISSON","HIPPOCAMPE","POULPE","CHIEN","CHAT","SINGE",
+                     "ZÈBRE","CHEVAL","RHINOCÉROS","HIPPOPOTAME","ÉCUREUIL","CORBEAU","AIGLE","LÉOPARD","SERPENT","CHAMEAU",
+                     "HIBOU","PERROQUET","COLIBRI","PAPILLON","MOINEAU","CRABE","HOMARD","REQUIN","BALEINE","PHOQUE",
+                     "LOUTRE","GRENOUILLE","CRAPAUD","CROCODILE","ALLIGATOR","ANTILOPE","BISON","GUÉPARD","GORILLE","PUMA"],
+        cat_movie: ["LE PARRAIN","STAR WARS","PULP FICTION","TITANIC","MATRIX","INCEPTION","GLADIATEUR","AVATAR","PARC JURASSIQUE","BLACK PANTHER",
+                    "IRON MAN","SPIDERMAN","THOR","HARRY POTTER","FROZEN","LE ROI LION","MOANA","CENDRILLON","BLANCHE-NEIGE","LA BELLE AU BOIS DORMANT",
+                    "LES AVENGERS","CAPITAINE AMÉRICA","DEADPOOL","ALIEN","TERMINATOR","UP","SHREK","À LA RECHERCHE DE NEMO","LE CHEVALIER NOIR","BATMAN",
+                    "SUPERMAN","IRON MAN 2","ANT-MAN","GARDIENS DE LA GALAXIE","DOCTEUR STRANGE","BLACK WIDOW","WONDER WOMAN","AQUAMAN","JOKER","JOHN WICK",
+                    "INTERSTELLAR","DUNKERQUE","MEMENTO","LE PRÉSTIGE","TWILIGHT","HUNGER GAMES","COCO","SOUL","FROZEN 2","INCEPTION 2"],
+        cat_celebrity: ["NAPOLÉON BONAPARTE","CATHERINE DENEUVE","ZINEDINE ZIDANE","BRIGITTE BARDOT","VICTOR HUGO","JEAN RENO","AUDREY TAUTOU","MARION COTILLARD","JULIETTE BINOCHE","VANESSA PARADIS",
+                        "PABLO PICASSO","SHAKIRA","LIONEL MESSI","PENÉLOPE CRUZ","GAEL GARCÍA BERNAL","ANTONIO BANDERAS","SALMA HAYEK","ENRIQUE IGLESIAS","RAFAEL NADAL","DAVID BISBAL",
+                        "ALEJANDRO SANZ","JUANES","THALÍA","CARLOS SANTANA","LOPEZ","ANA TORROJA","FLORENCIA PÉREZ","EMILIO ESTEVEZ","MARIO CASAS","UMA THURMAN",
+                        "KEIRA KNIGHTLEY","ORLANDO BLOOM","CHRISTIAN BALE","HUGH JACKMAN","NATALIE PORTMAN","TOM HANKS","JULIA ROBERTS","BRAD PITT","ANGELINA JOLIE","JOHNNY DEPP"]
+    }
+}
+
+        };
+
+        const getTranslation = (key) => { 
+            const lang = state.currentLanguage; 
+            return (data.languageStrings[lang] && data.languageStrings[lang][key]) || data.languageStrings.tr[key] || key; 
+        };
+        
+        const updateUIForLanguage = () => { 
+			document.documentElement.lang = state.currentLanguage; 
+			document.querySelectorAll('[data-key]').forEach(el => { 
+				const translation = getTranslation(el.getAttribute('data-key')); 
+				if (translation) el.innerText = translation; 
+			}); 
+			document.querySelectorAll('[data-key-placeholder]').forEach(el => { 
+				const translation = getTranslation(el.getAttribute('data-key-placeholder')); 
+				if (translation) el.placeholder = translation; 
+			}); 
+			
+			// YENİ: Sekme butonlarını da güncelle
+			document.querySelectorAll('.history-tab[data-key]').forEach(tab => {
+				const translation = getTranslation(tab.getAttribute('data-key'));
+				if (translation) tab.innerText = translation;
+			});
+		};
+        
+        const populateLanguageMenu = () => { 
+            dom.languageMenu.innerHTML = ''; 
+            for (const [code, name] of Object.entries(data.languages)) { 
+                const li = document.createElement('li'); 
+                li.textContent = name; 
+                li.dataset.lang = code; 
+                if (code === state.currentLanguage) li.classList.add('active'); 
+                dom.languageMenu.appendChild(li); 
+            } 
+        };
+        
+        const showScreen = (screenToShow) => {
+            dom.screens.forEach(s => s.classList.remove('active'));
+            screenToShow.classList.add('active');
+        };
+        
+        const updateMistakeCounter = () => { 
+            dom.mistakeDisplay.textContent = `${getTranslation('mistakes_label')} ${state.wrongGuesses}/${state.maxWrongGuesses}`; 
+        };
+        
+        const handleGuess = (letter, btn) => { 
+            btn.disabled = true; 
+            state.guessedLetters.push(letter); 
+            if (state.secretWord.includes(letter)) { 
+                renderWordDisplay(); 
+            } else { 
+                state.wrongGuesses++; 
+                updateMistakeCounter(); 
+                updateHangmanDrawing(); 
+            } 
+            if (state.gameMode === 'pc' && state.wrongGuesses === state.maxWrongGuesses - 1 && !dom.extraLifeBtn.disabled) { 
+                dom.extraLifeBtn.classList.add('pulse-danger'); 
+            } 
+            checkGameStatus(); 
+        };
+        
+        const checkGameStatus = () => { 
+            const isWinner = state.secretWord.split('').every(c => state.guessedLetters.includes(c) || c === ' '); 
+            if (isWinner) { 
+                if (state.gameMode === '2p') handleRoundEnd(true); 
+                else handlePcGameEnd(true); 
+            } else if (state.wrongGuesses >= state.maxWrongGuesses) { 
+                if (state.gameMode === '2p') handleRoundEnd(false); 
+                else handlePcGameEnd(false); 
+            } 
+        };
+        
+        const startTimer = () => { 
+            stopTimer(); 
+            if (state.gameMode !== 'pc' && state.gameMode !== '2p') return; 
+            state.seconds = 0; 
+            dom.timerDisplay.textContent = '00:00'; 
+            state.timerInterval = setInterval(() => { 
+                state.seconds++; 
+                const minutes = Math.floor(state.seconds / 60).toString().padStart(2, '0'); 
+                const seconds = (state.seconds % 60).toString().padStart(2, '0'); 
+                dom.timerDisplay.textContent = `${minutes}:${seconds}`; 
+            }, 1000);
+        };
+
+        const stopTimer = () => {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+            }
+        };
+
+        const calculateScore = () => Math.max(0, 1000 - (state.seconds * 10) - (state.wrongGuesses * 50));
+        
+        const setupPcGame = () => { 
+            state.gameMode = 'pc'; 
+            state.pcGameStartTime = Date.now();
+            state.seconds = 0;
+            state.extraLifeUsed = false;
+            dom.extraLifeBtn.disabled = false; 
+            dom.extraLifeBtn.classList.remove('pulse-danger'); 
+            
+            dom.timerDisplay.textContent = '00:00';
+            dom.timerDisplay.style.display = 'inline';
+            dom.timerLabel.style.display = 'inline';
+            dom.timerLabel.textContent = getTranslation('time_label');
+            
+            const db = data.pcWordDatabase[state.currentLanguage] || data.pcWordDatabase.tr; 
+            const categories = Object.keys(db); 
+            const randomCategoryKey = categories[Math.floor(Math.random() * categories.length)]; 
+            const randomCategoryText = getTranslation(randomCategoryKey); 
+            const words = db[randomCategoryKey]; 
+            const randomWord = words[Math.floor(Math.random() * words.length)]; 
+            
+            startGame(randomWord, randomCategoryText); 
+        };
+        
+        const calculateLetterBoxSize = () => {
+			const words = state.secretWord.split(' ');
+			const longestWordLength = Math.max(...words.map(w => w.length));
+			
+			const screenWidth = window.innerWidth;
+			let baseSize;
+			
+			if (screenWidth < 360) {
+				baseSize = 28;
+			} else if (screenWidth < 480) {
+				baseSize = 32;
+			} else if (screenWidth < 768) {
+				baseSize = 36;
+			} else {
+				baseSize = 40;
+			}
+			
+			let calculatedSize = baseSize;
+			if (longestWordLength > 8) {
+				calculatedSize = Math.max(24, baseSize - 4);
+			}
+			if (longestWordLength > 12) {
+				calculatedSize = Math.max(22, baseSize - 6);
+			}
+			
+			return calculatedSize;
+		};
+        
+        const startGame = (word, category) => {
+            state.secretWord = word.toLocaleUpperCase(state.currentLanguage);
+            state.currentCategoryText = category;
+            state.guessedLetters = [];
+            state.wrongGuesses = 0;
+            dom.gameContainer.dataset.gameMode = state.gameMode;
+            showScreen(dom.gameScreen);
+            
+            const words = state.secretWord.split(' ');
+            if (words.length === 1 && words[0] === '') {
+                resetToMainMenu();
+                alert('Lütfen geçerli bir kelime girin.');
+                return;
+            }
+            
+            const calculatedBoxWidth = calculateLetterBoxSize();
+            dom.wordDisplay.style.setProperty('--letter-box-size', `${calculatedBoxWidth}px`);
+            
+            renderWordDisplay();
+            createKeyboard();
+            updateHangmanDrawing();
+            updateMistakeCounter();
+            
+            if (state.gameMode === '2p') {
+                dom.timerDisplay.style.display = 'inline';
+                dom.timerLabel.style.display = 'inline';
+                dom.timerLabel.textContent = getTranslation('time_label');
+                dom.scoreboard.style.display = 'flex';
+                updateScoreboard();
+                dom.playerPrompt.textContent = getTranslation('player_prompt_2p').replace('{player}', state.currentPlayerGuesser);
+                startTimer();
+            } else {
+                dom.timerDisplay.style.display = 'inline';
+                dom.timerLabel.style.display = 'inline';
+                dom.timerLabel.textContent = getTranslation('time_label');
+                dom.scoreboard.style.display = 'none';
+                dom.playerPrompt.textContent = getTranslation('player_prompt_pc');
+                startTimer();
+            }
+            
+            dom.categoryDisplayGame.textContent = `${getTranslation('category_label')} ${state.currentCategoryText}`;
+            
+            if (state.gameMode === 'pc') {
+                dom.extraLifeBtn.style.display = 'flex';
+            } else {
+                dom.extraLifeBtn.style.display = 'none';
+            }
+        };
+        
+        const renderWordDisplay = () => {
+            const words = state.secretWord.split(' ');
+            if (words.length === 1 && words[0] === '') {
+                dom.wordDisplay.innerHTML = '';
+                return;
+            }
+            
+            const calculatedBoxWidth = calculateLetterBoxSize();
+            dom.wordDisplay.style.setProperty('--letter-box-size', `${calculatedBoxWidth}px`);
+            
+            const html = words.map(word => {
+                const lettersHtml = word.split('').map(char => 
+                    `<div class="letter-placeholder">${state.guessedLetters.includes(char) ? char : ''}</div>`
+                ).join('');
+                return `<div class="word-line">${lettersHtml}</div>`;
+            }).join('');
+            dom.wordDisplay.innerHTML = html;
+        };
+        
+        const createKeyboard = () => { 
+            dom.keyboardContainer.innerHTML = ''; 
+            const alphabet = data.alphabets[state.currentLanguage] || data.alphabets.tr; 
+            alphabet.split('').forEach(letter => { 
+                const btn = document.createElement('button'); 
+                btn.innerText = letter; 
+                btn.addEventListener('click', () => handleGuess(letter, btn)); 
+                dom.keyboardContainer.appendChild(btn); 
+            }); 
+        };
+        
+        const updateHangmanDrawing = () => 
+            dom.hangmanParts.forEach((part, i) => 
+                part.style.visibility = i < state.wrongGuesses ? 'visible' : 'hidden'
+            );
+        
+        const toggleTheme = () => { 
+            state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark'; 
+            dom.body.dataset.theme = state.currentTheme; 
+            localStorage.setItem('hangman_theme', state.currentTheme); 
+        };
+        
+        const toggleSound = () => { 
+            state.isMuted = !state.isMuted; 
+            localStorage.setItem('hangman_isMuted', state.isMuted); 
+            dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊'; 
+        };
+        
+        const updateScoreboard = () => { 
+            dom.scoreboard.innerHTML = `<div class="score-display" id="p1-score-display">👤 ${state.p1Name}: ${state.p1Score}</div><div class="score-display" id="p2-score-display">👤 ${state.p2Name}: ${state.p2Score}</div>`; 
+            document.querySelectorAll('.score-display').forEach(el => el.classList.remove('active-turn')); 
+            if (state.currentPlayerGuesser === state.p1Name) 
+                document.getElementById('p1-score-display').classList.add('active-turn'); 
+            else 
+                document.getElementById('p2-score-display').classList.add('active-turn'); 
+        };
+        
+        const saveScoreToHistory = (gameData) => {
+            const historyItem = {
+                id: Date.now(),
+                date: new Date().toLocaleString(state.currentLanguage),
+                gameMode: state.gameMode,
+                ...gameData
+            };
+            
+            state.roundHistory.unshift(historyItem);
+            
+            // Sadece son 50 kaydı tut
+            if (state.roundHistory.length > 50) {
+                state.roundHistory = state.roundHistory.slice(0, 50);
+            }
+            
+            localStorage.setItem('hangman_score_history', JSON.stringify(state.roundHistory));
+        };
+        
+        const handleRoundEnd = (isWin) => { 
+            stopTimer(); 
+            const score = isWin ? calculateScore() : 0; 
+            if (state.currentPlayerGuesser === state.p1Name) state.p1Score += score; 
+            else state.p2Score += score; 
+            
+            // Skoru kaydet
+            const gameData = {
+                round: state.currentRound, 
+                setter: state.currentPlayerSetter, 
+                guesser: state.currentPlayerGuesser, 
+                score: score, 
+                word: state.secretWord,
+                category: state.currentCategoryText,
+                time: state.seconds,
+                mistakes: state.wrongGuesses
+            };
+            
+            saveScoreToHistory(gameData);
+            
+            dom.historyBtn.disabled = false; 
+            dom.resultMessage.className = isWin ? 'win' : 'lose'; 
+            dom.resultMessage.textContent = isWin ? getTranslation('round_end_win').replace('{score}', score) : getTranslation('round_end_lose'); 
+            dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; 
+            dom.nextActionBtn.textContent = (state.currentRound < state.maxRounds) ? getTranslation('next_round_btn') : getTranslation('game_over_btn'); 
+            dom.resultModal.classList.add('show'); 
+        };
+        
+        const handlePcGameEnd = (isWin) => { 
+            if(state.gameMode === 'pc'){ 
+                const endTime = Date.now();
+                const timeSpent = Math.floor((endTime - state.pcGameStartTime) / 1000);
+                const minutes = Math.floor(timeSpent / 60).toString().padStart(2, '0');
+                const seconds = (timeSpent % 60).toString().padStart(2, '0');
+                const timeString = `${minutes}:${seconds}`;
+                
+                stopTimer();
+                dom.timerDisplay.textContent = timeString;
+                
+                // PC modu skorunu kaydet
+                const gameData = {
+                    score: isWin ? calculateScore() : 0,
+                    word: state.secretWord,
+                    category: state.currentCategoryText,
+                    time: timeSpent,
+                    mistakes: state.wrongGuesses,
+                    result: isWin ? 'win' : 'lose'
+                };
+                
+                saveScoreToHistory(gameData);
+                
+                dom.resultMessage.className = isWin ? 'win' : 'lose'; 
+                dom.resultMessage.textContent = isWin ? getTranslation('win_message') : getTranslation('lose_message'); 
+                dom.correctWordDisplay.textContent = `${getTranslation('correct_word_was')} ${state.secretWord}`; 
+                dom.nextActionBtn.textContent = getTranslation('new_game_btn'); 
+                dom.resultModal.classList.add('show'); 
+            } 
+        };
+        
+        const setupNewRound = () => { 
+            if (state.currentRound >= state.maxRounds) { 
+                endGame(); 
+                return; 
+            } 
+            state.currentRound++; 
+            state.currentPlayerSetter = (state.currentRound % 2 !== 0) ? state.p1Name : state.p2Name; 
+            state.currentPlayerGuesser = (state.currentRound % 2 !== 0) ? state.p2Name : state.p1Name; 
+            dom.wordSetupTitle.innerHTML = getTranslation('word_setup_title')
+                .replace('{player}', `<span class="player-name">${state.currentPlayerSetter}</span>`)
+                .replace('{round}', state.currentRound)
+                .replace('{max}', state.maxRounds); 
+            dom.wordSetupForm.reset(); 
+            dom.customCategoryInput.style.display = 'none'; 
+            showScreen(dom.wordSetupScreen); 
+        };
+        
+        const endGame = () => { 
+            state.gamePhase = 'game-over'; 
+            stopTimer(); 
+            let winnerMessage; 
+            if (state.p1Score > state.p2Score) 
+                winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p1Name} 🏆`); 
+            else if (state.p2Score > state.p1Score) 
+                winnerMessage = getTranslation('winner_is').replace('{player}', `🏆 ${state.p2Name} 🏆`); 
+            else 
+                winnerMessage = getTranslation('tie_game'); 
+            dom.resultMessage.className = 'win'; 
+            dom.resultMessage.innerHTML = `${getTranslation('game_over_title')}<br>${winnerMessage}`; 
+            dom.correctWordDisplay.innerHTML = `<strong>${getTranslation('final_scores')}</strong><br>${state.p1Name}: ${state.p1Score} | ${state.p2Name}: ${state.p2Score}`; 
+            dom.nextActionBtn.textContent = getTranslation('new_tournament_btn'); 
+            dom.resultModal.classList.add('show'); 
+        };
+        
+        // YENİ: Gelişmiş skor geçmişi modalını göster
+        const showHistoryModal = () => { 
+            console.log('Skor geçmişi butonuna tıklandı');
+            
+            if (!dom.historyModal) {
+                console.error('History modal elementi bulunamadı!');
+                return;
+            }
+            
+            // Sekmeleri sıfırla
+            dom.historyTabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.tab === 'pc') {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // İçerikleri sıfırla
+            document.querySelectorAll('.history-section').forEach(section => {
+                section.classList.remove('active');
+                if (section.id === 'pc-history') {
+                    section.classList.add('active');
+                }
+            });
+            
+            // İçerikleri güncelle
+            updatePcHistoryContent();
+            updateTwoPlayerHistoryContent();
+            
+            dom.historyModal.classList.add('show'); 
+        };
+        
+        // YENİ: PC modu geçmiş içeriğini güncelle
+        const updatePcHistoryContent = () => {
+            if (!dom.pcHistoryDetails) return;
+            
+            const pcGames = state.roundHistory.filter(record => record.gameMode === 'pc');
+            
+            if (pcGames.length === 0) {
+                dom.pcHistoryDetails.innerHTML = `<p style="text-align: center; padding: 2rem; color: var(--text-color);">${getTranslation('no_history_message')}</p>`;
+                dom.pcAverageScore.textContent = `${getTranslation('average_score')}: -`;
+                return;
+            }
+            
+            // İstatistikleri hesapla
+            const totalGames = pcGames.length;
+            const wins = pcGames.filter(game => game.result === 'win').length;
+            const losses = totalGames - wins;
+            const totalScore = pcGames.reduce((sum, game) => sum + game.score, 0);
+            const averageScore = Math.round(totalScore / totalGames);
+            const winRate = Math.round((wins / totalGames) * 100);
+            
+            // Ortalama skoru güncelle
+            dom.pcAverageScore.textContent = `${getTranslation('average_score')}: ${averageScore} | ${getTranslation('win_rate')}: ${winRate}% | ${getTranslation('wins')}: ${wins} | ${getTranslation('losses')}: ${losses}`;
+            
+            // Oyun geçmişini listele
+            let pcHistoryHtml = '';
+            pcGames.forEach((record, index) => {
+                const timeFormatted = `${Math.floor(record.time / 60)}:${(record.time % 60).toString().padStart(2, '0')}`;
+                
+                pcHistoryHtml += `
+                    <div class="history-round">
+                        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
+                            <h4 style="margin: 0; color: var(--primary-color); flex: 1;">
+                                ${record.date}
+                            </h4>
+                            <button class="delete-single-btn" data-id="${record.id}" data-type="pc">${getTranslation('delete')}</button>
+                        </div>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('word_label')}:</strong> 
+                        <span style="color: var(--success-color); font-weight: bold;">${record.word}</span></p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('category_label')}:</strong> ${record.category}</p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('result')}:</strong> 
+                        <span style="color: ${record.result === 'win' ? 'var(--success-color)' : 'var(--error-color)'}; font-weight: bold;">
+                            ${record.result === 'win' ? getTranslation('wins') : getTranslation('losses')}
+                        </span></p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('points_label')}:</strong> 
+                        <span style="color: var(--success-color); font-weight: bold; font-size: 1.1rem;">${record.score}</span></p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('time_label')}:</strong> ${timeFormatted}</p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('mistakes_label')}:</strong> ${record.mistakes}/6</p>
+                    </div>
+                `;
+            });
+            
+            dom.pcHistoryDetails.innerHTML = pcHistoryHtml;
+            
+            // Silme butonlarına event listener ekle
+            dom.pcHistoryDetails.querySelectorAll('.delete-single-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.dataset.id);
+                    const type = btn.dataset.type;
+                    showConfirmDeleteModal(id, type, 'single');
+                });
+            });
+        };
+        
+        // YENİ: 2 Kişilik mod geçmiş içeriğini güncelle
+        const updateTwoPlayerHistoryContent = () => {
+            if (!dom.twoPHistoryDetails) return;
+            
+            const twoPlayerGames = state.roundHistory.filter(record => record.gameMode === '2p');
+            
+            if (twoPlayerGames.length === 0) {
+                dom.twoPHistoryDetails.innerHTML = `<p style="text-align: center; padding: 2rem; color: var(--text-color);">${getTranslation('no_history_message')}</p>`;
+                dom.winnersList.innerHTML = `<h3>${getTranslation('winners')}</h3><p>${getTranslation('no_history_message')}</p>`;
+                return;
+            }
+            
+            // Kazananları hesapla
+            const playerStats = {};
+            twoPlayerGames.forEach(game => {
+                if (!playerStats[game.guesser]) {
+                    playerStats[game.guesser] = {
+                        totalPoints: 0,
+                        gamesPlayed: 0,
+                        wins: 0,
+                        currentStreak: 0,
+                        maxStreak: 0
+                    };
+                }
+                
+                playerStats[game.guesser].totalPoints += game.score;
+                playerStats[game.guesser].gamesPlayed++;
+                
+                if (game.score > 0) {
+                    playerStats[game.guesser].wins++;
+                    playerStats[game.guesser].currentStreak++;
+                    playerStats[game.guesser].maxStreak = Math.max(playerStats[game.guesser].maxStreak, playerStats[game.guesser].currentStreak);
+                } else {
+                    playerStats[game.guesser].currentStreak = 0;
+                }
+            });
+            
+            // Kazananları listele
+            let winnersHtml = `<h3>${getTranslation('winners')}</h3>`;
+            Object.entries(playerStats).forEach(([player, stats]) => {
+                winnersHtml += `
+                    <div class="winner-item">
+                        <div>
+                            <div class="winner-name">${player}</div>
+                            <div class="winner-stats">
+                                ${getTranslation('total_points')}: ${stats.totalPoints} | 
+                                ${getTranslation('games_played')}: ${stats.gamesPlayed} | 
+                                ${getTranslation('wins')}: ${stats.wins} |
+                                ${getTranslation('win_streak')}: ${stats.maxStreak}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            dom.winnersList.innerHTML = winnersHtml;
+            
+            // Oyun geçmişini listele
+            let twoPlayerHistoryHtml = '';
+            twoPlayerGames.forEach((record, index) => {
+                const timeFormatted = `${Math.floor(record.time / 60)}:${(record.time % 60).toString().padStart(2, '0')}`;
+                
+                twoPlayerHistoryHtml += `
+                    <div class="history-round">
+                        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
+                            <h4 style="margin: 0; color: var(--primary-color); flex: 1;">
+                                ${getTranslation('round_label')} ${record.round} - ${record.date}
+                            </h4>
+                            <button class="delete-single-btn" data-id="${record.id}" data-type="2p">${getTranslation('delete')}</button>
+                        </div>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('word_label')}:</strong> 
+                        <span style="color: var(--success-color); font-weight: bold;">${record.word}</span></p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('setter_label')}:</strong> ${record.setter}</p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('guesser_label')}:</strong> ${record.guesser}</p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('points_label')}:</strong> 
+                        <span style="color: var(--success-color); font-weight: bold; font-size: 1.1rem;">${record.score}</span></p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('category_label')}:</strong> ${record.category}</p>
+                        <p style="margin: 0.25rem 0;"><strong>${getTranslation('time_label')}:</strong> ${timeFormatted}</p>
+                    </div>
+                `;
+            });
+            
+            dom.twoPHistoryDetails.innerHTML = twoPlayerHistoryHtml;
+            
+            // Silme butonlarına event listener ekle
+            dom.twoPHistoryDetails.querySelectorAll('.delete-single-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = parseInt(btn.dataset.id);
+                    const type = btn.dataset.type;
+                    showConfirmDeleteModal(id, type, 'single');
+                });
+            });
+        };
+        
+        // YENİ: Onay modalını göster
+        const showConfirmDeleteModal = (id, type, deleteType) => {
+            state.pendingDeleteId = id;
+            state.pendingDeleteType = type;
+            
+            // Modal metinlerini güncelle
+            if (deleteType === 'single') {
+                dom.confirmDeleteTitle.textContent = getTranslation('confirm_delete_single_title');
+                dom.confirmDeleteDesc.textContent = getTranslation('confirm_delete_single_desc');
+            } else {
+                dom.confirmDeleteTitle.textContent = getTranslation('confirm_delete_all_title');
+                dom.confirmDeleteDesc.textContent = getTranslation('confirm_delete_all_desc');
+            }
+            
+            dom.confirmDeleteModal.classList.add('show');
+        };
+        
+        // YENİ: Tekil kayıt silme
+        const deleteSingleRecord = (id) => {
+            state.roundHistory = state.roundHistory.filter(record => record.id !== id);
+            localStorage.setItem('hangman_score_history', JSON.stringify(state.roundHistory));
+            
+            // İlgili içeriği güncelle
+            if (state.pendingDeleteType === 'pc') {
+                updatePcHistoryContent();
+            } else {
+                updateTwoPlayerHistoryContent();
+            }
+            
+            
+        };
+        
+        // YENİ: Tüm geçmişi temizle
+        const clearAllHistory = () => {
+            state.roundHistory = [];
+            localStorage.setItem('hangman_score_history', JSON.stringify([]));
+            
+            // İçerikleri güncelle
+            updatePcHistoryContent();
+            updateTwoPlayerHistoryContent();
+            
+            
+        };
+        
+        const resetToMainMenu = () => {
+            stopTimer();
+            state.gamePhase = 'menu';
+            dom.gameContainer.removeAttribute('data-game-mode');
+            dom.timerDisplay.style.display = 'none';
+            dom.timerLabel.style.display = 'none';
+            dom.extraLifeBtn.style.display = 'none';
+            showScreen(dom.modeSelectionScreen);
+        };
+
+        const showAdInNewTab = () => {
+			return new Promise((resolve) => {
+				const adWindow = window.open('reklamizlendi.html', '_blank');
+				setTimeout(() => {
+					if (adWindow && !adWindow.closed) {
+						adWindow.close();
+					}
+					resolve();
+				}, 3000);
+			});
+		};
+
+        const handleResize = () => {
+            if (state.gameMode && state.secretWord) {
+                renderWordDisplay();
+            }
+        };
+
+        const init = () => {
+            dom.body.dataset.theme = state.currentTheme;
+            dom.soundToggleBtn.innerText = state.isMuted ? '🔇' : '🔊';
+            updateUIForLanguage();
+            populateLanguageMenu();
+            showScreen(dom.modeSelectionScreen);
+
+            window.addEventListener('resize', handleResize);
+
+            dom.vsPcBtn.addEventListener('click', setupPcGame);
+            dom.twoPlayerBtn.addEventListener('click', () => { 
+                state.gameMode = '2p'; 
+                dom.playerNamesForm.reset(); 
+                showScreen(dom.playerNamesScreen); 
+            });
+            
+            dom.playerNamesForm.addEventListener('submit', (e) => { 
+                e.preventDefault(); 
+                state.p1Name = dom.p1NameInput.value.trim() || getTranslation('player1_name_placeholder'); 
+                state.p2Name = dom.p2NameInput.value.trim() || getTranslation('player2_name_placeholder'); 
+                state.maxRounds = parseInt(dom.roundSelect.value, 10); 
+                state.p1Score = 0; 
+                state.p2Score = 0; 
+                state.currentRound = 0; 
+                state.gamePhase = 'playing'; 
+                dom.historyBtn.disabled = true; 
+                setupNewRound(); 
+            });
+            
+            dom.wordSetupForm.addEventListener('submit', (e) => { 
+                e.preventDefault(); 
+                const word = dom.wordInput.value.trim(); 
+                let categoryText; 
+                if (dom.categorySelect.value === 'custom') { 
+                    categoryText = dom.customCategoryInput.value.trim() || getTranslation('cat_custom'); 
+                } else if (dom.categorySelect.value) { 
+                    categoryText = getTranslation(dom.categorySelect.value); 
+                } 
+                if (word && categoryText) { 
+                    startGame(word, categoryText); 
+                } else { 
+                    alert(getTranslation('alert_no_word_cat')); 
+                } 
+            });
+            
+            dom.categorySelect.addEventListener('change', (e) => { 
+                dom.customCategoryInput.style.display = e.target.value === 'custom' ? 'block' : 'none'; 
+            });
+            
+            dom.nextActionBtn.addEventListener('click', () => { 
+                dom.resultModal.classList.remove('show'); 
+                if(state.gameMode === 'pc') { 
+                    setupPcGame(); 
+                } else { 
+                    if (state.gamePhase === 'game-over') { 
+                        dom.playerNamesForm.reset(); 
+                        showScreen(dom.playerNamesScreen); 
+                    } else if (state.currentRound === state.maxRounds) { 
+                        endGame(); 
+                    } else { 
+                        setupNewRound(); 
+                    } 
+                } 
+            });
+            
+            dom.mainMenuBtn.addEventListener('click', () => { 
+                dom.resultModal.classList.remove('show'); 
+                resetToMainMenu(); 
+            });
+            
+            dom.backToMenuBtn.addEventListener('click', resetToMainMenu);
+            dom.backToNamesBtn.addEventListener('click', () => showScreen(dom.playerNamesScreen));
+            
+            // YENİ: Gelişmiş skor geçmişi butonları
+            dom.historyBtn.addEventListener('click', showHistoryModal);
+            dom.scoreHistoryBtn.addEventListener('click', showHistoryModal);
+            
+            // YENİ: Tüm geçmişi temizle butonu
+            dom.clearHistoryBtn.addEventListener('click', () => {
+                showConfirmDeleteModal(null, null, 'all');
+            });
+            
+            // YENİ: Onay modalı butonları
+            dom.confirmDeleteYesBtn.addEventListener('click', () => {
+                dom.confirmDeleteModal.classList.remove('show');
+                if (state.pendingDeleteId) {
+                    // Tekil kayıt silme
+                    deleteSingleRecord(state.pendingDeleteId);
+                } else {
+                    // Tüm geçmişi temizle
+                    clearAllHistory();
+                }
+                // State'i temizle
+                state.pendingDeleteId = null;
+                state.pendingDeleteType = null;
+            });
+            
+            dom.confirmDeleteNoBtn.addEventListener('click', () => {
+                dom.confirmDeleteModal.classList.remove('show');
+                // State'i temizle
+                state.pendingDeleteId = null;
+                state.pendingDeleteType = null;
+            });
+            
+            // YENİ: Sekme değiştirme
+            dom.historyTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabType = tab.dataset.tab;
+                    
+                    // Aktif sekmeyi güncelle
+                    dom.historyTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // İlgili içeriği göster
+                    document.querySelectorAll('.history-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(`${tabType}-history`).classList.add('active');
+                });
+            });
+            
+            dom.historyModal.addEventListener('click', (e) => {
+                if (e.target === dom.historyModal) {
+                    dom.historyModal.classList.remove('show');
+                }
+            });
+            
+            dom.closeHistoryBtn.addEventListener('click', () => { 
+                dom.historyModal.classList.remove('show'); 
+            });
+            
+            dom.themeToggleBtn.addEventListener('click', toggleTheme);
+            dom.soundToggleBtn.addEventListener('click', toggleSound);
+            
+            dom.homeBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.add('show'); });
+            dom.confirmHomeYesBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.remove('show'); resetToMainMenu(); });
+            dom.confirmHomeNoBtn.addEventListener('click', () => { dom.confirmHomeModal.classList.remove('show'); });
+            
+            dom.restartBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.add('show'); });
+            dom.confirmRestartYesBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.remove('show'); setupPcGame(); });
+            dom.confirmRestartNoBtn.addEventListener('click', () => { dom.confirmRestartModal.classList.remove('show'); });
+            
+			dom.extraLifeBtn.addEventListener('click', () => { dom.extraLifeModal.classList.add('show'); });
+			dom.watchAdBtn.addEventListener('click', async () => { 
+				dom.extraLifeModal.classList.remove('show'); 
+				dom.watchAdBtn.disabled = true;
+				dom.watchAdBtn.textContent = getTranslation('watching_ad_btn') || 'Reklam izleniyor...';
+				
+				try {
+					await showAdInNewTab();
+					
+					state.wrongGuesses = Math.max(0, state.wrongGuesses - 1);
+					state.extraLifeUsed = true;
+					updateMistakeCounter(); 
+					updateHangmanDrawing(); 
+					dom.extraLifeBtn.disabled = true; 
+					dom.extraLifeBtn.classList.remove('pulse-danger'); 
+					
+					dom.watchAdBtn.disabled = false;
+					dom.watchAdBtn.textContent = getTranslation('watch_ad_btn');
+				} catch (error) {
+					console.error('Reklam hatası:', error);
+					dom.watchAdBtn.disabled = false;
+					dom.watchAdBtn.textContent = getTranslation('watch_ad_btn');
+					alert('Reklam yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+				}
+			});
+            dom.continueGameBtn.addEventListener('click', () => { dom.extraLifeModal.classList.remove('show'); });
+            
+            dom.langSelectBtn.addEventListener('click', () => dom.languageMenu.classList.toggle('show'));
+            dom.languageMenu.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'LI') return;
+                const newLang = e.target.dataset.lang;
+                if (newLang === state.currentLanguage) { 
+                    dom.languageMenu.classList.remove('show'); 
+                    return; 
+                }
+                state.currentLanguage = newLang;
+                localStorage.setItem('hangman_lang', newLang);
+                updateUIForLanguage();
+                populateLanguageMenu();
+                dom.languageMenu.classList.remove('show');
+            });
+        };
+        
+        init();
+    })();
+    </script>
+</body>
+</html>
             --bg-gradient: linear-gradient(135deg, #232526 0%, #414345 100%);
             --text-color: #e0e0e0;
             --primary-color: #ffffff;
